@@ -352,9 +352,15 @@ jobs:
 
       - name: Synchronize Packages
         run: yarn
-        
-      - name: Build media-helpers
-        run: yarn workspace @webex/media-helpers run build:src 
+
+      - name: Build  packages
+        run: yarn workspaces foreach --parallel --verbose run build:src 
+
+      - name: build media-helpers
+        run: yarn workspace @webex/media-helpers build:src
+
+      - name: build local
+        run: yarn build:local
 
       - name: Test - Integration
         run: yarn workspaces foreach --verbose --exclude webex-js-sdk --include '${{ needs.generate-package-matrix.outputs.changed }}' run test:integration
