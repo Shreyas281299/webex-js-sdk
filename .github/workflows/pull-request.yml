@@ -353,10 +353,13 @@ jobs:
       - name: Synchronize Packages
         run: yarn
 
-      - name: Build 
-        run: yarn build
+      - name: Build  packages
+        run: yarn workspaces foreach --parallel --verbose run build:src 
 
-      - name : Build local
+      - name: build media-helpers
+        run: yarn workspace @webex/media-helpers build:src
+
+      - name: build local
         run: yarn build:local
 
 
