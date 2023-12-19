@@ -352,10 +352,13 @@ jobs:
 
       - name: Synchronize Packages
         run: yarn
-        
-      - name: Build media-helpers
-        run: yarn workspace @webex/media-helpers run build:src 
 
+      - name: Amplify-tools build
+        run: yarn workspaces foreach --from '@webex/*-tools' --topological-dev --parallel --verbose run build:src
+
+      - name: Amplify build local
+        run: yarn run build:local
+        
       - name: Test - Integration
         run: yarn workspaces foreach --verbose --exclude webex-js-sdk --include '${{ needs.generate-package-matrix.outputs.changed }}' run test:integration
 
