@@ -353,6 +353,7 @@ jobs:
       - name: Synchronize Packages
         run: yarn
 
+
       - name: Amplify-tools build
         run: yarn workspaces foreach --from '@webex/*-tools' --topological-dev --parallel --verbose run build:src
 
