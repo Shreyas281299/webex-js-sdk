@@ -42,7 +42,7 @@ const createThreadObjs = (parents) => {
 };
 
 describe('plugin-conversation', function () {
-  this.timeout(120000);
+  //this.timeout(120000);
 
   describe('when fetching conversations', () => {
     let kirk, mccoy, participants, scott, webex, spock, suluEU, checkov;
@@ -154,7 +154,7 @@ describe('plugin-conversation', function () {
             scr: {
               loc: makeLocalUrl('/sample-image-small-one.png'),
             },
-            url: makeLocalUrl('/sample-image-small-one.png')
+            url: makeLocalUrl('/sample-image-small-one.png'),
           })
           .then((f) =>
             fh.isMatchingFile(f, sampleImageSmallOnePng).then((result) => assert.isTrue(result))
@@ -961,7 +961,7 @@ describe('plugin-conversation', function () {
           .then(({edit}) => {
             assert.include(edit, parent.id);
           }));
-      
+
       it('retrieves parent IDs for reactions', () =>
         webex.internal.conversation
           .addReaction(conversation, 'heart', parent)

@@ -42,7 +42,7 @@ xdescribe('plugin-search', () => {
     );
 
     before('create bot', function () {
-      this.timeout(retry.timeout(20000));
+      //this.timeout(retry.timeout(20000));
 
       return retry(() =>
         webex
@@ -682,7 +682,7 @@ xdescribe('plugin-search', () => {
     }
 
     describe('expects results', function () {
-      this.timeout(retry.timeout(20000));
+      //this.timeout(retry.timeout(20000));
 
       beforeEach('unset searchKeyUrl', () => {
         spock.webex.internal.device.set('searchKeyUrl', undefined);

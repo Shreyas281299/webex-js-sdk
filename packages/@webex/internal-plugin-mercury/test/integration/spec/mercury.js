@@ -12,7 +12,7 @@ import testUsers from '@webex/test-helper-test-users';
 import refreshCallback from '@webex/test-helper-refresh-callback';
 
 describe('plugin-mercury', function () {
-  this.timeout(30000);
+  //this.timeout(30000);
   describe('Mercury', () => {
     let webex;
 

@@ -14,7 +14,7 @@ import testUsers from '@webex/test-helper-test-users';
 const debug = require('debug')('attachmentActions');
 
 describe('plugin-attachment-actions', function () {
-  this.timeout(60000);
+  //this.timeout(60000);
 
   let creator, spock;
   let messageSender, buttonPusher;

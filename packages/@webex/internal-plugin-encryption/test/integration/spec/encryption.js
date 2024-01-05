@@ -13,7 +13,7 @@ import testUsers from '@webex/test-helper-test-users';
 import makeLocalUrl from '@webex/test-helper-make-local-url';
 
 describe('Encryption', function () {
-  this.timeout(30000);
+  //this.timeout(30000);
 
   let key, user, webex;
 

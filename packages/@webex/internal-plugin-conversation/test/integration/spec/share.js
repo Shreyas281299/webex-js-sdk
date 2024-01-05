@@ -25,7 +25,7 @@ function returnFirstArg(fn) {
 }
 
 describe('plugin-conversation', function () {
-  this.timeout(120000);
+  //this.timeout(120000);
   describe('share', () => {
     let mccoy, participants, webex, spock;
 

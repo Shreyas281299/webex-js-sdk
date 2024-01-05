@@ -14,7 +14,7 @@ import WebexCore from '@webex/webex-core';
 import '@webex/internal-plugin-locus';
 
 describe('plugin-lyra', function () {
-  this.timeout(30000);
+  //this.timeout(30000);
   describe('Space', () => {
     let participants;
     let lyraMachine;
@@ -23,7 +23,7 @@ describe('plugin-lyra', function () {
     let conversation;
 
     before('create lyra machine', function () {
-      this.timeout(retry.timeout(20000));
+      //this.timeout(retry.timeout(20000));
 
       return retry(() =>
         testUsers.create({

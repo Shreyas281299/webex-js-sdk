@@ -8,7 +8,7 @@ import WebexCore, {MemoryStoreAdapter, WebexHttpError} from '@webex/webex-core';
 import makeLocalUrl from '@webex/test-helper-make-local-url';
 
 describe('webex-core', function () {
-  this.timeout(30000);
+  //this.timeout(30000);
   describe('Webex', () => {
     describe('#request()', () => {
       let webex;

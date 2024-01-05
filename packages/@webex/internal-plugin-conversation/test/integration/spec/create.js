@@ -12,7 +12,7 @@ import uuid from 'uuid';
 import fh from '@webex/test-helper-file';
 
 describe('plugin-conversation', function () {
-  this.timeout(60000);
+  //this.timeout(60000);
   describe('#create()', () => {
     let checkov, kirk, mccoy, participants, webex, spock;
     let sampleTextOne = 'sample-text-one.txt';

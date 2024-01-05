@@ -22,7 +22,7 @@ describe('plugin-lyra', () => {
     let conversation;
 
     before('create lyra machine', function () {
-      this.timeout(retry.timeout(20000));
+      //this.timeout(retry.timeout(20000));
 
       return retry(() =>
         testUsers.create({

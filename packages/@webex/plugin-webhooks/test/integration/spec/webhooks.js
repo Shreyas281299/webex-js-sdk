@@ -13,7 +13,7 @@ import testUsers from '@webex/test-helper-test-users';
 
 // SPARK-413317
 describe.skip('plugin-webhooks', function () {
-  this.timeout(60000);
+  //this.timeout(60000);
 
   let webex;
 

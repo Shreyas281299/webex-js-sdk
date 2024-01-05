@@ -13,7 +13,7 @@ import sinon from 'sinon';
 
 // SPARK-413317
 describe.skip('plugin-presence', function () {
-  this.timeout(10000);
+  //this.timeout(10000);
   describe('Presence', () => {
     let mccoy, spock;
 

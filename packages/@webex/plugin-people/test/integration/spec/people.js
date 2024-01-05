@@ -11,7 +11,7 @@ import testUsers from '@webex/test-helper-test-users';
 import sinon from 'sinon';
 
 describe('plugin-people', async function () {
-  this.timeout(60000);
+  //this.timeout(60000);
   describe('People', () => {
     let bones, mccoy, spock;
 

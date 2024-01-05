@@ -14,7 +14,7 @@ import testUsers from '@webex/test-helper-test-users';
 import {find} from 'lodash';
 
 describe('plugin-teams', function () {
-  this.timeout(60000);
+  //this.timeout(60000);
 
   let webex, user;
 

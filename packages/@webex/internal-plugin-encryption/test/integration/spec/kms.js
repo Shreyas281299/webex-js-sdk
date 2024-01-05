@@ -15,7 +15,7 @@ import {skipInBrowser} from '@webex/test-helper-mocha';
 const debug = require('debug')('kms');
 
 describe('Encryption', function () {
-  this.timeout(30000);
+  //this.timeout(30000);
   describe('KMS', () => {
     let mccoy, webex, spock;
 

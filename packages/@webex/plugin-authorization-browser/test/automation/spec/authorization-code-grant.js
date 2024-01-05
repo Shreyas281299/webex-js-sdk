@@ -13,7 +13,7 @@ import pkg from '../../../package';
 const redirectUri = process.env.WEBEX_REDIRECT_URI || process.env.REDIRECT_URI;
 
 describe('plugin-authorization-browser', function () {
-  this.timeout(120000);
+  //this.timeout(120000);
   describe('Authorization', () => {
     describe.skip('Authorization Code Grant', () => {
       let browser, user;

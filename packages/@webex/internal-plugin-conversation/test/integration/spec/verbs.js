@@ -14,7 +14,7 @@ import fh from '@webex/test-helper-file';
 import {skipInNode} from '@webex/test-helper-mocha';
 
 describe('plugin-conversation', function () {
-  this.timeout(30000);
+  //this.timeout(30000);
   describe('verbs', () => {
     let checkov, mccoy, participants, webex, spock;
 

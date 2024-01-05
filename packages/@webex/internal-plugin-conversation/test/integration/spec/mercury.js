@@ -10,7 +10,7 @@ import testUsers from '@webex/test-helper-test-users';
 import uuid from 'uuid';
 
 describe('plugin-conversation', function () {
-  this.timeout(30000);
+  //this.timeout(30000);
   describe('mercury processing', () => {
     let kirk, mccoy, participants, webex;
 

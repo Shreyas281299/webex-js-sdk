@@ -13,7 +13,7 @@ import sinon from 'sinon';
 import testUsers from '@webex/test-helper-test-users';
 
 describe('plugin-team-memberships', function () {
-  this.timeout(60000);
+  //this.timeout(60000);
 
   let webex;
 

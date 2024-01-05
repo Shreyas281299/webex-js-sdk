@@ -7,7 +7,7 @@ import testUsers from '@webex/test-helper-test-users';
 import Webex from 'webex';
 
 describe('webex', function () {
-  this.timeout(60000);
+  //this.timeout(60000);
   describe('Webex', () => {
     describe('.init', () => {
       it('merges config correctly', () => {

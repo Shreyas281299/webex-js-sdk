@@ -7,7 +7,7 @@ import {assert} from '@webex/test-helper-chai';
 import testUsers from '@webex/test-helper-test-users';
 
 describe('webex', function () {
-  this.timeout(60000);
+  //this.timeout(60000);
   describe('webex/env', () => {
     browserOnly(it)('does not work in web browsers', () => {
       assert.throws(() => {

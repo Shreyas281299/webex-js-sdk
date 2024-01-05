@@ -10,7 +10,7 @@ import Webex from 'webex';
 import pkg from '../../../package';
 
 describe('webex', function () {
-  this.timeout(60000);
+  //this.timeout(60000);
 
   let webex;
 

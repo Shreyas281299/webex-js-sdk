@@ -10,7 +10,7 @@ import WebexCore from '@webex/webex-core';
 import testUsers from '@webex/test-helper-test-users';
 
 describe('plugin-mercury', function () {
-  this.timeout(30000);
+  //this.timeout(30000);
 
   let webex;
 

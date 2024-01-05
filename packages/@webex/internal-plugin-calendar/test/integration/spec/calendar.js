@@ -197,7 +197,7 @@ function postParticipantsToWhistler(webex, type, payload) {
 describe.skip('plugin-calendar', () => {
   describe('Calendar', () => {
     describe('#list()', function () {
-      this.timeout(retry.timeout(20000));
+      //this.timeout(retry.timeout(20000));
       let creator, mccoy, webex, spock;
 
       before('create test users', () =>

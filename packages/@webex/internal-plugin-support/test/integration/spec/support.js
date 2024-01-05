@@ -14,7 +14,7 @@ require('@webex/internal-plugin-support');
 const {TooManyRequests} = WebexHttpError;
 
 describe('plugin-support', function () {
-  this.timeout(60000);
+  //this.timeout(60000);
 
   let webex;
 

@@ -11,7 +11,7 @@ import {map, find} from 'lodash';
 import testUsers from '@webex/test-helper-test-users';
 
 describe('plugin-flag', function () {
-  this.timeout(60000);
+  //this.timeout(60000);
   describe('Flag', () => {
     let flagConversation, mccoy, participants, spock;
 

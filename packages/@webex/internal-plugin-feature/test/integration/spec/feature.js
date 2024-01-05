@@ -11,7 +11,7 @@ import {expectEvent, flaky} from '@webex/test-helper-mocha';
 import sinon from 'sinon';
 
 describe('plugin-feature', function () {
-  this.timeout(30000);
+  //this.timeout(30000);
   let webex, spock;
 
   describe('#setFeature()', () => {

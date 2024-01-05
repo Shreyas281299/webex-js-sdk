@@ -16,7 +16,7 @@ import testUsers from '@webex/test-helper-test-users';
 const debug = require('debug')('rooms');
 
 describe('plugin-rooms', function () {
-  this.timeout(60000);
+  //this.timeout(60000);
 
   let webex, actor;
 

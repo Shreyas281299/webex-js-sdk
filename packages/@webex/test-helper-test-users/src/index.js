@@ -22,7 +22,7 @@ const allUsers = [];
 if (after) {
   after(function () {
     /* eslint no-invalid-this: [0] */
-    this.timeout(120000);
+    // this.timeout(120000);
     allUsers.forEach(
       (user) =>
         user.webex && user.webex.internal.mercury && user.webex.internal.mercury.disconnect()

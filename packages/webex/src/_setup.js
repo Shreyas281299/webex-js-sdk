@@ -9,7 +9,7 @@ var testUsers = require('@webex/test-helper-test-users');
 var Webex = require(`webex`);
 
 before(function () {
-  this.timeout(60000);
+  // this.timeout(60000);
 
   if (global.webex) {
     return Promise.resolve();

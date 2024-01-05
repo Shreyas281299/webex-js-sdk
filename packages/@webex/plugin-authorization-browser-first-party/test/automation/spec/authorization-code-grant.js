@@ -31,7 +31,7 @@ const runs = [
 
 runs.forEach((run) => {
   describe(`plugin-authorization-browser-first-party ${run.it}`, function () {
-    this.timeout(120000);
+    //this.timeout(120000);
 
     describe('Authorization', () => {
       describe.skip('Authorization Code Grant', () => {

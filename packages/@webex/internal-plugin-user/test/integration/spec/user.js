@@ -31,7 +31,7 @@ const runs = [
 
 runs.forEach((run) => {
   describe(`plugin-user ${run.it}`, function () {
-    this.timeout(30000);
+    //this.timeout(30000);
 
     let webex, user1, user2, user3;
 

@@ -11,7 +11,7 @@ import sinon from 'sinon';
 import {flaky, nodeOnly} from '@webex/test-helper-mocha';
 
 describe('http-core', function () {
-  this.timeout(30000);
+  //this.timeout(30000);
   describe('request()', () => {
     describe('GET', () => {
       it('retrieves html', () =>

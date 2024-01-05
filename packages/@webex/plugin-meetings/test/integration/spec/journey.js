@@ -6,7 +6,13 @@ import {skipInNode} from '@webex/test-helper-mocha';
 import sinon from 'sinon';
 
 import BrowserDetection from '@webex/plugin-meetings/dist/common/browser-detection';
-import {createCameraStream, createDisplayStream, createMicrophoneStream, LocalTrackEvents, LocalStreamEventNames} from '@webex/plugin-meetings';
+import {
+  createCameraStream,
+  createDisplayStream,
+  createMicrophoneStream,
+  LocalTrackEvents,
+  LocalStreamEventNames,
+} from '@webex/plugin-meetings';
 
 import testUtils from '../../utils/testUtils';
 import integrationTestUtils from '../../utils/integrationTestUtils';
@@ -26,34 +32,35 @@ const localStreams = {
     camera: undefined,
     screenShare: {
       video: undefined,
-    }
+    },
   },
   bob: {
     microphone: undefined,
     camera: undefined,
     screenShare: {
       video: undefined,
-    }
+    },
   },
   chris: {
     microphone: undefined,
     camera: undefined,
     screenShare: {
       video: undefined,
-    }
+    },
   },
 };
 
-
 const waitForPublished = (meeting, expectedPublished, description) => {
-  return testUtils.waitForEvents([{
-    scope: meeting,
-    event: EVENT_TRIGGERS.MEETING_STREAM_PUBLISH_STATE_CHANGED,
-    match: (event) => {
-      console.log(`${description} is now ${event.isPublished ? 'published': 'not published'}`);
-      return (event.isPublished === expectedPublished);
-    }
-  }]);
+  return testUtils.waitForEvents([
+    {
+      scope: meeting,
+      event: EVENT_TRIGGERS.MEETING_STREAM_PUBLISH_STATE_CHANGED,
+      match: (event) => {
+        console.log(`${description} is now ${event.isPublished ? 'published' : 'not published'}`);
+        return event.isPublished === expectedPublished;
+      },
+    },
+  ]);
 };
 
 skipInNode(describe)('plugin-meetings', () => {
@@ -296,7 +303,7 @@ skipInNode(describe)('plugin-meetings', () => {
           );
         }
 
-        this.timeout(80000);
+        //this.timeout(80000);
       });
 
       it('No previous Call', () => {
@@ -344,7 +351,10 @@ skipInNode(describe)('plugin-meetings', () => {
           })
           .then(() =>
             Promise.all([
-              integrationTestUtils.addMedia(alice, {microphone: localStreams.alice.microphone, camera: localStreams.alice.camera}),
+              integrationTestUtils.addMedia(alice, {
+                microphone: localStreams.alice.microphone,
+                camera: localStreams.alice.camera,
+              }),
               testUtils.waitForEvents([
                 {scope: alice.meeting, event: 'meeting:media:local:start', user: alice},
               ]),
@@ -378,7 +388,10 @@ skipInNode(describe)('plugin-meetings', () => {
 
       it('bob adds media to the meeting', () =>
         Promise.all([
-          integrationTestUtils.addMedia(bob, {microphone: localStreams.bob.microphone, camera: localStreams.bob.camera}),
+          integrationTestUtils.addMedia(bob, {
+            microphone: localStreams.bob.microphone,
+            camera: localStreams.bob.camera,
+          }),
           testUtils
             .waitForEvents([
               {scope: bob.meeting, event: 'meeting:media:local:start', user: bob},
@@ -498,21 +511,25 @@ skipInNode(describe)('plugin-meetings', () => {
 
       it('alice update Audio', async () => {
         const newMicrophoneStream = await createMicrophoneStream();
-        const newStreamPublished = waitForPublished(alice.meeting, true, "Alice AUDIO: new microphone stream");
+        const newStreamPublished = waitForPublished(
+          alice.meeting,
+          true,
+          'Alice AUDIO: new microphone stream'
+        );
 
         await testUtils.delayedPromise(
-            alice.meeting
-              .publishStreams({
-                microphone: newMicrophoneStream,
-              })
-              .then(() => {
-                console.log('Alice AUDIO: new stream on meeting object:', alice.meeting.mediaProperties.audioStream);
-                assert.equal(
-                  alice.meeting.mediaProperties.audioStream.id,
-                  newMicrophoneStream.id
-                );
-              })
-          );
+          alice.meeting
+            .publishStreams({
+              microphone: newMicrophoneStream,
+            })
+            .then(() => {
+              console.log(
+                'Alice AUDIO: new stream on meeting object:',
+                alice.meeting.mediaProperties.audioStream
+              );
+              assert.equal(alice.meeting.mediaProperties.audioStream.id, newMicrophoneStream.id);
+            })
+        );
 
         await newStreamPublished;
 
@@ -521,21 +538,25 @@ skipInNode(describe)('plugin-meetings', () => {
 
       it('alice update video', async () => {
         const newCameraStream = await createCameraStream();
-        const newStreamPublished = waitForPublished(alice.meeting, true, "Alice VIDEO: new camera stream");
+        const newStreamPublished = waitForPublished(
+          alice.meeting,
+          true,
+          'Alice VIDEO: new camera stream'
+        );
 
         await testUtils.delayedPromise(
-            alice.meeting
-              .publishStreams({
-                camera: newCameraStream,
-              })
-              .then(() => {
-                console.log('Alice VIDEO: new stream on meeting:', alice.meeting.mediaProperties.videoStream);
-                assert.equal(
-                  alice.meeting.mediaProperties.videoStream.id,
-                  newCameraStream.id
-                );
-              })
-          );
+          alice.meeting
+            .publishStreams({
+              camera: newCameraStream,
+            })
+            .then(() => {
+              console.log(
+                'Alice VIDEO: new stream on meeting:',
+                alice.meeting.mediaProperties.videoStream
+              );
+              assert.equal(alice.meeting.mediaProperties.videoStream.id, newCameraStream.id);
+            })
+        );
 
         await newStreamPublished;
 
@@ -581,7 +602,8 @@ skipInNode(describe)('plugin-meetings', () => {
         assert.equal(localStreams.bob.microphone.muted, true);
 
         // now alice tries to unmmute bob
-        await testUtils.delayedPromise(alice.meeting.mute(bob.meeting.members.selfId, false))
+        await testUtils
+          .delayedPromise(alice.meeting.mute(bob.meeting.members.selfId, false))
           // expect the waitForEvents to timeout
           .then(() =>
             testUtils.waitForEvents(
@@ -617,12 +639,16 @@ skipInNode(describe)('plugin-meetings', () => {
       it('alice shares the screen with highFrameRate', async () => {
         localStreams.alice.screenShare.video = await createDisplayStream();
 
-        const startedSharingLocal = testUtils.waitForEvents([{scope: alice.meeting, event: 'meeting:startedSharingLocal'}]);
-        const startedSharingRemote = testUtils.waitForEvents([{scope: bob.meeting, event: 'meeting:startedSharingRemote'}])
+        const startedSharingLocal = testUtils.waitForEvents([
+          {scope: alice.meeting, event: 'meeting:startedSharingLocal'},
+        ]);
+        const startedSharingRemote = testUtils
+          .waitForEvents([{scope: bob.meeting, event: 'meeting:startedSharingRemote'}])
           .then((response) => {
             assert.equal(response[0].result.memberId, alice.meeting.selfId);
           });
-        const bobReceivesMembersUpdate = testUtils.waitForEvents([{scope: bob.meeting.members, event: 'members:update'}])
+        const bobReceivesMembersUpdate = testUtils
+          .waitForEvents([{scope: bob.meeting.members, event: 'members:update'}])
           .then((response) => {
             console.log(
               'SCREEN SHARE RESPONSE ',
@@ -630,9 +656,15 @@ skipInNode(describe)('plugin-meetings', () => {
             );
           });
 
-        const screenShareVideoPublished = waitForPublished(alice.meeting, true, "alice's screen share video stream");
+        const screenShareVideoPublished = waitForPublished(
+          alice.meeting,
+          true,
+          "alice's screen share video stream"
+        );
 
-        await testUtils.delayedPromise(alice.meeting.publishStreams({screenShare: {video: localStreams.alice.screenShare.video}}));
+        await testUtils.delayedPromise(
+          alice.meeting.publishStreams({screenShare: {video: localStreams.alice.screenShare.video}})
+        );
 
         await screenShareVideoPublished;
         await startedSharingLocal;
@@ -653,23 +685,39 @@ skipInNode(describe)('plugin-meetings', () => {
       it('bob steals the screen share from alice', async () => {
         localStreams.bob.screenShare.video = await createDisplayStream();
 
-        const stoppedSharingLocal = testUtils.waitForEvents([{scope: alice.meeting, event: 'meeting:stoppedSharingLocal'}]);
-        const startedSharingLocal = testUtils.waitForEvents([{scope: bob.meeting, event: 'meeting:startedSharingLocal'}]);
-        const startedSharingRemote = testUtils.waitForEvents([{scope: alice.meeting, event: 'meeting:startedSharingRemote'}])
+        const stoppedSharingLocal = testUtils.waitForEvents([
+          {scope: alice.meeting, event: 'meeting:stoppedSharingLocal'},
+        ]);
+        const startedSharingLocal = testUtils.waitForEvents([
+          {scope: bob.meeting, event: 'meeting:startedSharingLocal'},
+        ]);
+        const startedSharingRemote = testUtils
+          .waitForEvents([{scope: alice.meeting, event: 'meeting:startedSharingRemote'}])
           .then((response) => {
             assert.equal(response[0].result.memberId, bob.meeting.selfId);
           });
-        const aliceReceivesMembersUpdate = testUtils.waitForEvents([{scope: alice.meeting.members, event: 'members:update'}])
+        const aliceReceivesMembersUpdate = testUtils
+          .waitForEvents([{scope: alice.meeting.members, event: 'members:update'}])
           .then((response) => {
             console.log(
               'SCREEN SHARE RESPONSE ',
               JSON.stringify(response, testUtils.getCircularReplacer())
             );
           });
-        const aliceScreenShareVideoUnpublished = waitForPublished(alice.meeting, false, "alice's screen share video stream");
-        const bobScreenShareVideoPublished = waitForPublished(bob.meeting, true, "bob's screen share video stream");
+        const aliceScreenShareVideoUnpublished = waitForPublished(
+          alice.meeting,
+          false,
+          "alice's screen share video stream"
+        );
+        const bobScreenShareVideoPublished = waitForPublished(
+          bob.meeting,
+          true,
+          "bob's screen share video stream"
+        );
 
-        await testUtils.delayedPromise(bob.meeting.publishStreams({screenShare: {video: localStreams.bob.screenShare.video}}));
+        await testUtils.delayedPromise(
+          bob.meeting.publishStreams({screenShare: {video: localStreams.bob.screenShare.video}})
+        );
 
         await bobScreenShareVideoPublished;
         await aliceScreenShareVideoUnpublished;
@@ -689,11 +737,21 @@ skipInNode(describe)('plugin-meetings', () => {
       });
 
       it('bob stops sharing', async () => {
-        const screenShareVideoUnpublished = waitForPublished(bob.meeting, false, "bob's screen share video stream");
-        const stoppedSharingLocal = testUtils.waitForEvents([{scope: bob.meeting, event: 'meeting:stoppedSharingLocal'}]);
-        const stoppedSharingRemote = testUtils.waitForEvents([{scope: alice.meeting, event: 'meeting:stoppedSharingRemote'}]);
+        const screenShareVideoUnpublished = waitForPublished(
+          bob.meeting,
+          false,
+          "bob's screen share video stream"
+        );
+        const stoppedSharingLocal = testUtils.waitForEvents([
+          {scope: bob.meeting, event: 'meeting:stoppedSharingLocal'},
+        ]);
+        const stoppedSharingRemote = testUtils.waitForEvents([
+          {scope: alice.meeting, event: 'meeting:stoppedSharingRemote'},
+        ]);
 
-        await testUtils.delayedPromise(bob.meeting.unpublishStreams([localStreams.bob.screenShare.video]));
+        await testUtils.delayedPromise(
+          bob.meeting.unpublishStreams([localStreams.bob.screenShare.video])
+        );
 
         await screenShareVideoUnpublished;
         await stoppedSharingLocal;
@@ -813,22 +871,34 @@ skipInNode(describe)('plugin-meetings', () => {
       it('bob steals the share from alice with desktop share', async () => {
         localStreams.bob.screenShare.video = await createDisplayStream();
 
-        const stoppedSharingWhiteboard = testUtils.waitForEvents([{scope: alice.meeting, event: 'meeting:stoppedSharingWhiteboard'}]);
-        const startedSharingLocal = testUtils.waitForEvents([{scope: bob.meeting, event: 'meeting:startedSharingLocal'}]);
-        const startedSharingRemote = testUtils.waitForEvents([{scope: alice.meeting, event: 'meeting:startedSharingRemote'}])
+        const stoppedSharingWhiteboard = testUtils.waitForEvents([
+          {scope: alice.meeting, event: 'meeting:stoppedSharingWhiteboard'},
+        ]);
+        const startedSharingLocal = testUtils.waitForEvents([
+          {scope: bob.meeting, event: 'meeting:startedSharingLocal'},
+        ]);
+        const startedSharingRemote = testUtils
+          .waitForEvents([{scope: alice.meeting, event: 'meeting:startedSharingRemote'}])
           .then((response) => {
             assert.equal(response[0].result.memberId, bob.meeting.selfId);
           });
-        const aliceReceivesMembersUpdate = testUtils.waitForEvents([{scope: alice.meeting.members, event: 'members:update'}])
+        const aliceReceivesMembersUpdate = testUtils
+          .waitForEvents([{scope: alice.meeting.members, event: 'members:update'}])
           .then((response) => {
             console.log(
               'SCREEN SHARE RESPONSE ',
               JSON.stringify(response, testUtils.getCircularReplacer())
             );
           });
-        const bobScreenShareVideoPublished = waitForPublished(bob.meeting, true, "bob's screen share video stream");
+        const bobScreenShareVideoPublished = waitForPublished(
+          bob.meeting,
+          true,
+          "bob's screen share video stream"
+        );
 
-        await testUtils.delayedPromise(bob.meeting.publishStreams({screenShare: {video: localStreams.bob.screenShare.video}}));
+        await testUtils.delayedPromise(
+          bob.meeting.publishStreams({screenShare: {video: localStreams.bob.screenShare.video}})
+        );
 
         await bobScreenShareVideoPublished;
         await stoppedSharingWhiteboard;
@@ -916,7 +986,12 @@ skipInNode(describe)('plugin-meetings', () => {
                 localStreams.chris.microphone = await createMicrophoneStream();
                 localStreams.chris.camera = await createCameraStream();
               })
-              .then(() => integrationTestUtils.addMedia(chris, {microphone: localStreams.chris.microphone, camera: localStreams.chris.camera}))
+              .then(() =>
+                integrationTestUtils.addMedia(chris, {
+                  microphone: localStreams.chris.microphone,
+                  camera: localStreams.chris.camera,
+                })
+              )
               .then(() => assert(enumerateSpy.called));
           })
           .then(() =>
