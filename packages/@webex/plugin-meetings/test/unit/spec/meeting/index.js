@@ -243,6 +243,10 @@ describe('plugin-meetings', () => {
       getReachabilityMetrics: sinon.stub().resolves({}),
     };
     webex.internal.llm.on = sinon.stub();
+    webex.internal.voicea.on = sinon.stub();
+    webex.internal.voicea.off = sinon.stub();
+    webex.internal.voicea.listenToEvents = sinon.stub();
+    webex.internal.voicea.toggleTranscribing = sinon.stub();
     webex.internal.newMetrics.callDiagnosticLatencies = new CallDiagnosticLatencies(
       {},
       {parent: webex}
@@ -656,15 +660,69 @@ describe('plugin-meetings', () => {
         });
       });
       describe('#startTranscription', () => {
-        it('should invoke subscribe method to invoke the callback', () => {
-          meeting.monitorTranscriptionSocketConnection = sinon.stub();
-          meeting.initializeTranscription = sinon.stub();
+        it('should subscribe to events for the first time', async () => {
+          meeting.joinedWith = {
+            state: 'JOINED'
+          };
+          meeting.areVoiceaEventsSetup = false;
+          meeting.roles = ['MODERATOR'];
 
-          meeting.startTranscription().then(() => {
-            assert.equal(true, false);
-            assert.calledOnce(meeting.initializeTranscription);
-            assert.calledOnce(meeting.monitorTranscriptionSocketConnection);
-          });
+          await meeting.startTranscription();
+
+          assert.equal(webex.internal.voicea.on.callCount, 5);
+          assert.equal(meeting.areVoiceaEventsSetup, true);
+          assert.equal(webex.internal.voicea.listenToEvents.callCount, 1);
+          assert.calledWith(
+            webex.internal.voicea.toggleTranscribing,
+            true,
+          );
+        });
+
+        it('should not subscribe to events after the first time', async () => {
+          meeting.joinedWith = {
+            state: 'JOINED'
+          };
+          meeting.areVoiceaEventsSetup = false;
+          meeting.roles = ['MODERATOR'];
+
+          await meeting.startTranscription();
+          
+          assert.equal(webex.internal.voicea.on.callCount, 5);
+          assert.equal(meeting.areVoiceaEventsSetup, true);
+          assert.equal(webex.internal.voicea.listenToEvents.callCount, 1);
+          assert.calledWith(
+            webex.internal.voicea.toggleTranscribing,
+            true,
+          );
+
+          await meeting.startTranscription();
+          assert.equal(webex.internal.voicea.on.callCount, 5);
+          assert.equal(meeting.areVoiceaEventsSetup, true);
+          assert.equal(webex.internal.voicea.listenToEvents.callCount, 1);
+          assert.calledTwice(
+            webex.internal.voicea.toggleTranscribing,
+          );
+          assert.calledWith(
+            webex.internal.voicea.toggleTranscribing,
+            true,
+          );
+        });
+
+        it('should listen to events and not toggleTranscribing if the user is not a host', async () => {
+          meeting.joinedWith = {
+            state: 'JOINED'
+          };
+          meeting.areVoiceaEventsSetup = false;
+          meeting.roles = ['COHOST'];
+
+          await meeting.startTranscription();
+          
+          assert.equal(webex.internal.voicea.on.callCount, 5);
+          assert.equal(meeting.areVoiceaEventsSetup, true);
+          assert.equal(webex.internal.voicea.listenToEvents.callCount, 1);
+          assert.notCalled(
+            webex.internal.voicea.toggleTranscribing
+          );
         });
 
         it("should throw error if request doesn't work", async () => {
@@ -678,14 +736,20 @@ describe('plugin-meetings', () => {
         });
       });
 
-      describe('#stopReceivingTranscription', () => {
-        it.skip('should get invoked', () => {
-          meeting.transcription = {
-            closeSocket: sinon.stub(),
-          };
-
-          meeting.stopReceivingTranscription();
-          assert.calledOnce(meeting.transcription.closeSocket);
+      describe('#stopTranscription', () => {
+        it('should stop listening to voicea events and also trigger a stop event', () => {
+          meeting.stopTranscription();
+          assert.equal(webex.internal.voicea.off.callCount, 5);
+          assert.equal(meeting.areVoiceaEventsSetup, false);
+          assert.calledWith(
+            TriggerProxy.trigger,
+            sinon.match.instanceOf(Meeting),
+            {
+              file: 'meeting/index',
+              function: 'triggerStopReceivingTranscriptionEvent',
+            },
+            EVENT_TRIGGERS.MEETING_STOPPED_RECEIVING_TRANSCRIPTION
+          );
         });
       });
       describe('#isReactionsSupported', () => {
@@ -880,13 +944,6 @@ describe('plugin-meetings', () => {
             assert.calledOnce(meeting.setLocus);
             assert.equal(result, joinMeetingResult);
           });
-          it.skip('should invoke `startTranscription()` if receiveTranscription is set to true', async () => {
-            meeting.isTranscriptionSupported = sinon.stub().returns(true);
-            meeting.startTranscription = sinon.stub().returns(Promise.resolve());
-
-            await meeting.join({receiveTranscription: true});
-            assert.calledOnce(meeting.startTranscription);
-          });
 
           it('should take trigger from meeting joinTrigger if available', () => {
             meeting.updateCallStateForMetrics({joinTrigger: 'fake-join-trigger'});
@@ -1055,60 +1112,6 @@ describe('plugin-meetings', () => {
 
                 assert.deepEqual(Metrics.sendBehavioralMetric.getCalls()[1].args, [
                   BEHAVIORAL_METRICS.LLM_CONNECTION_AFTER_JOIN_FAILURE,
-                  {
-                    correlation_id: meeting.correlationId,
-                    reason: err.message,
-                    stack: err.stack,
-                  },
-                ]);
-              }
-            });
-          });
-
-          describe('receive transcription', () => {
-            it.skip('should invoke `startTranscription()` if receiveTranscription is set to true', async () => {
-              meeting.isTranscriptionSupported = sinon.stub().returns(true);
-              meeting.startTranscription = sinon.stub().returns(Promise.resolve());
-
-              await meeting.join({receiveTranscription: true});
-              assert.calledOnce(meeting.startTranscription);
-            });
-
-            it('make sure that join does not wait for setting up receive transcriptions', async () => {
-              const defer = new Defer();
-
-              meeting.isTranscriptionSupported = sinon.stub().returns(true);
-              meeting.receiveTranscription = sinon.stub().returns(defer.promise);
-
-              const result = await meeting.join({receiveTranscription: true});
-
-              assert.equal(result, joinMeetingResult);
-
-              defer.resolve();
-            });
-
-            it.skip('handles catching error of receiveTranscription(), and join still resolves', async () => {
-              const defer = new Defer();
-
-              meeting.isTranscriptionSupported = sinon.stub().returns(true);
-              meeting.startTranscription = sinon.stub().returns(defer.promise);
-
-              const result = await meeting.join({receiveTranscription: true});
-
-              assert.equal(result, joinMeetingResult);
-
-              defer.reject(new Error('bad day', {cause: 'bad weather'}));
-
-              try {
-                await defer.promise;
-              } catch (err) {
-                assert.deepEqual(Metrics.sendBehavioralMetric.getCalls()[0].args, [
-                  BEHAVIORAL_METRICS.JOIN_SUCCESS,
-                  {correlation_id: meeting.correlationId},
-                ]);
-
-                assert.deepEqual(Metrics.sendBehavioralMetric.getCalls()[1].args, [
-                  BEHAVIORAL_METRICS.RECEIVE_TRANSCRIPTION_AFTER_JOIN_FAILURE,
                   {
                     correlation_id: meeting.correlationId,
                     reason: err.message,
@@ -3601,7 +3604,7 @@ describe('plugin-meetings', () => {
         });
       });
 
-      describe.skip('#leave', () => {
+      describe('#leave', () => {
         let sandbox;
 
         it('should have #leave', () => {
@@ -7173,16 +7176,6 @@ describe('plugin-meetings', () => {
             EVENT_TRIGGERS.MEETING_INTERPRETATION_UPDATE
           );
         });
-
-        it.skip('transcription should start when configured when guest admitted', (done) => {
-          meeting.isTranscriptionSupported = sinon.stub().returns(true);
-          meeting.receiveTranscription = sinon.stub().returns(true);
-          meeting.startTranscription = sinon.stub();
-
-          meeting.locusInfo.emit({function: 'test', file: 'test'}, 'SELF_ADMITTED_GUEST', test1);
-          assert.calledOnce(meeting.startTranscription);
-          done();
-        });
       });
 
       describe('#setUpBreakoutsListener', () => {
@@ -7283,44 +7276,6 @@ describe('plugin-meetings', () => {
       });
 
       describe('#setupLocusControlsListener', () => {
-        it.skip('transcription should start when meeting transcribe state is updated with active transcribing', (done) => {
-          const payload = {caption: true, transcribing: true};
-          meeting.startTranscription = sinon.stub();
-          meeting.config.receiveTranscription = true;
-          meeting.transcription = null;
-
-          meeting.locusInfo.emit(
-            {function: 'meeting/index', file: 'setupLocusControlsListener'},
-            'CONTROLS_MEETING_TRANSCRIBE_UPDATED',
-            payload
-          );
-          assert.calledOnce(meeting.startTranscription);
-          done();
-        });
-
-        it.skip('transcription should stop when meeting transcribe state is updated with inactive transcribing', (done) => {
-          const payload = {caption: false, transcribing: false};
-          meeting.startTranscription = sinon.stub();
-          meeting.config.receiveTranscription = true;
-          meeting.transcription = {};
-
-          meeting.locusInfo.emit(
-            {function: 'meeting/index', file: 'setupLocusControlsListener'},
-            'CONTROLS_MEETING_TRANSCRIBE_UPDATED',
-            payload
-          );
-          assert.notCalled(meeting.startTranscription);
-          assert.calledThrice(TriggerProxy.trigger);
-          assert.calledWith(
-            TriggerProxy.trigger,
-            sinon.match.instanceOf(Meeting),
-            {file: 'meeting/index', function: 'setupLocusControlsListener'},
-            'meeting:receiveTranscription:stopped',
-            payload
-          );
-          done();
-        });
-
         it('listens to the locus breakouts update event', () => {
           const locus = {
             breakout: 'breakout',
