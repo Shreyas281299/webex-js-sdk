@@ -111,6 +111,10 @@ import CallDiagnosticMetrics from '@webex/internal-plugin-metrics/src/call-diagn
 import {ERROR_DESCRIPTIONS} from '@webex/internal-plugin-metrics/src/call-diagnostic/config';
 import MeetingCollection from '@webex/plugin-meetings/src/meetings/collection';
 
+import {
+  EVENT_TRIGGERS as VOICEAEVENTS,
+} from '@webex/internal-plugin-voicea';
+
 describe('plugin-meetings', () => {
   const logger = {
     info: () => {},
@@ -243,10 +247,6 @@ describe('plugin-meetings', () => {
       getReachabilityMetrics: sinon.stub().resolves({}),
     };
     webex.internal.llm.on = sinon.stub();
-    webex.internal.voicea.on = sinon.stub();
-    webex.internal.voicea.off = sinon.stub();
-    webex.internal.voicea.listenToEvents = sinon.stub();
-    webex.internal.voicea.toggleTranscribing = sinon.stub();
     webex.internal.newMetrics.callDiagnosticLatencies = new CallDiagnosticLatencies(
       {},
       {parent: webex}
@@ -660,6 +660,12 @@ describe('plugin-meetings', () => {
         });
       });
       describe('#startTranscription', () => {
+        beforeEach(() => {
+          webex.internal.voicea.on = sinon.stub();
+          webex.internal.voicea.off = sinon.stub();
+          webex.internal.voicea.listenToEvents = sinon.stub();
+          webex.internal.voicea.toggleTranscribing = sinon.stub();
+        });
         it('should subscribe to events for the first time', async () => {
           meeting.joinedWith = {
             state: 'JOINED'
@@ -737,6 +743,12 @@ describe('plugin-meetings', () => {
       });
 
       describe('#stopTranscription', () => {
+        beforeEach(() => {
+          webex.internal.voicea.on = sinon.stub();
+          webex.internal.voicea.off = sinon.stub();
+          webex.internal.voicea.listenToEvents = sinon.stub();
+          webex.internal.voicea.toggleTranscribing = sinon.stub();
+        });
         it('should stop listening to voicea events and also trigger a stop event', () => {
           meeting.stopTranscription();
           assert.equal(webex.internal.voicea.off.callCount, 5);
@@ -749,6 +761,47 @@ describe('plugin-meetings', () => {
               function: 'triggerStopReceivingTranscriptionEvent',
             },
             EVENT_TRIGGERS.MEETING_STOPPED_RECEIVING_TRANSCRIPTION
+          );
+        });
+      });
+
+      describe('transcription events', () => {
+        it('should trigger meeting:caption-received event', () => {
+          meeting.voiceaListenerCallbacks[VOICEAEVENTS.NEW_CAPTION]({});
+          assert.calledWith(
+            TriggerProxy.trigger,
+            sinon.match.instanceOf(Meeting),
+            {
+              file: 'meeting/index',
+              function: 'setUpVoiceaListeners',
+            },
+            EVENT_TRIGGERS.MEETING_CAPTION_RECEIVED
+          );
+        });
+
+        it('should trigger meeting:receiveTranscription:started event', () => {
+          meeting.voiceaListenerCallbacks[VOICEAEVENTS.VOICEA_ANNOUNCEMENT]({});
+          assert.calledWith(
+            TriggerProxy.trigger,
+            sinon.match.instanceOf(Meeting),
+            {
+              file: 'meeting/index',
+              function: 'setUpVoiceaListeners',
+            },
+            EVENT_TRIGGERS.MEETING_STARTED_RECEIVING_TRANSCRIPTION
+          );
+        });
+
+        it('should trigger meeting:caption-received event', () => {
+          meeting.voiceaListenerCallbacks[VOICEAEVENTS.NEW_CAPTION]({});
+          assert.calledWith(
+            TriggerProxy.trigger,
+            sinon.match.instanceOf(Meeting),
+            {
+              file: 'meeting/index',
+              function: 'setUpVoiceaListeners',
+            },
+            EVENT_TRIGGERS.MEETING_CAPTION_RECEIVED
           );
         });
       });
@@ -916,7 +969,7 @@ describe('plugin-meetings', () => {
           setCorrelationIdSpy = sinon.spy(meeting, 'setCorrelationId');
           meeting.setLocus = sinon.stub().returns(true);
           webex.meetings.registered = true;
-          meeting.updateLLMConnection = sinon.stub();
+          meeting.updateLLMConnection = sinon.stub().returns(Promise.resolve());
         });
 
         describe('successful', () => {
@@ -926,6 +979,7 @@ describe('plugin-meetings', () => {
 
           it('should join the meeting and return promise', async () => {
             const join = meeting.join({pstnAudioType: 'dial-in'});
+            meeting.config.enableAutomaticLLM = true;
 
             assert.calledWith(webex.internal.newMetrics.submitClientEvent, {
               name: 'client.call.initiated',
@@ -943,6 +997,16 @@ describe('plugin-meetings', () => {
             assert.calledOnce(MeetingUtil.joinMeeting);
             assert.calledOnce(meeting.setLocus);
             assert.equal(result, joinMeetingResult);
+
+            assert.calledWith(
+              TriggerProxy.trigger,
+              sinon.match.instanceOf(Meeting),
+              {
+                file: 'meeting/index',
+                function: 'join',
+              },
+              EVENT_TRIGGERS.MEETING_TRANSCRIPTION_CONNECTED,
+            );
           });
 
           it('should take trigger from meeting joinTrigger if available', () => {
@@ -3641,6 +3705,7 @@ describe('plugin-meetings', () => {
           meeting.unsetPeerConnections = sinon.stub().returns(true);
           meeting.logger.error = sinon.stub().returns(true);
           meeting.updateLLMConnection = sinon.stub().returns(Promise.resolve());
+          webex.internal.voicea.off = sinon.stub().returns(true);
 
           // A meeting needs to be joined to leave
           meeting.meetingState = 'ACTIVE';
@@ -5430,7 +5495,7 @@ describe('plugin-meetings', () => {
           assert.exists(meeting.endMeetingForAll);
         });
 
-        it.skip('should reject if meeting is already ended', async () => {
+        it('should reject if meeting is already ended', async () => {
           await meeting.endMeetingForAll().catch((err) => {
             assert.instanceOf(err, MeetingNotActiveError);
           });
@@ -5452,6 +5517,8 @@ describe('plugin-meetings', () => {
           meeting.unsetPeerConnections = sinon.stub().returns(true);
           meeting.logger.error = sinon.stub().returns(true);
           meeting.updateLLMConnection = sinon.stub().returns(Promise.resolve());
+          meeting.transcription = {};
+          meeting.stopTranscription = sinon.stub();
 
           // A meeting needs to be joined to end
           meeting.meetingState = 'ACTIVE';
@@ -5461,7 +5528,7 @@ describe('plugin-meetings', () => {
           sandbox.restore();
           sandbox = null;
         });
-        it.skip('should end the meeting for all and return promise', async () => {
+        it('should end the meeting for all and return promise', async () => {
           const endMeetingForAll = meeting.endMeetingForAll();
 
           assert.exists(endMeetingForAll.then);
@@ -5472,6 +5539,7 @@ describe('plugin-meetings', () => {
           assert.calledOnce(meeting?.closePeerConnections);
           assert.calledOnce(meeting?.unsetRemoteStreams);
           assert.calledOnce(meeting?.unsetPeerConnections);
+          assert.calledOnce(meeting?.stopTranscription);
         });
       });
 
