@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { exec } = require('child_process');
+const {exec} = require('child_process');
 
 // Function to execute shell command and capture output
 /**
@@ -63,7 +63,7 @@ function ensureDirectoryExistence(filePath) {
   if (fs.existsSync(dirname)) {
     return true;
   }
-  fs.mkdirSync(dirname, { recursive: true });
+  fs.mkdirSync(dirname, {recursive: true});
   return undefined;
 }
 
@@ -76,7 +76,7 @@ export async function createOrUpdateChangelog(packages, prevCommitId) {
   Object.keys(packages).forEach(async (index) => {
     const pkgName = packages[index].name;
     const pkg = packages[index].data;
-    const { version } = pkg;
+    const {version} = pkg;
     const versionKey = `${version.major}.${version.minor}.${version.patch}`;
     const exactVersion = getExactVersion(version);
 
@@ -89,7 +89,7 @@ export async function createOrUpdateChangelog(packages, prevCommitId) {
     try {
       // @ts-ignore
       commits = await runShellScript(
-        `packages/tools/package/src/commands/changelog/getCommits.sh ${prevCommitId}`,
+        `packages/tools/package/src/commands/changelog/getCommits.sh ${prevCommitId}`
       );
     } catch (err) {
       console.log('Changelog Error: Error while getting commits', err);
@@ -119,9 +119,9 @@ export async function createOrUpdateChangelog(packages, prevCommitId) {
     // @ts-ignore
     if (changelogData[pkgName]) {
       // @ts-ignore
-      changelogData[pkgName] = { ...changelogData[pkgName], ...changelogEntry[pkgName] };
+      changelogData[pkgName] = {...changelogData[pkgName], ...changelogEntry[pkgName]};
     } else {
-      changelogData = { ...changelogData, ...changelogEntry };
+      changelogData = {...changelogData, ...changelogEntry};
     }
 
     // Write the updated changelog data back to the file
