@@ -9,6 +9,7 @@ export default class Collection {
   namespace = 'Meetings';
   propertyName: string;
 
+  // console.log("This is just for test")
   /**
    * @param {String} property
    * @memberof Collection
