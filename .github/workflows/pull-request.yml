@@ -228,6 +228,12 @@ jobs:
           echo "changed packages - ${{ steps.generate-package-matrix-changed.outputs.changed}}"
           echo "changed packages and dependents - ${{ steps.generate-package-matrix-recursive.outputs.recursive }}"
 
+      - name: update-changelog
+        run: |
+          yarn package-tools changelog --packages ${{ steps.generate-package-matrix-recursive.outputs.recursive }} --tag ${GITHUB_REF##*/} --commit ${{ github.event.pull_request.base.sha }}
+          git add changelog/
+          git commit -m "chore(changelog): update changelog"
+          git push origin documentation --force
 
   test-browser:
     name: Test - Browser
