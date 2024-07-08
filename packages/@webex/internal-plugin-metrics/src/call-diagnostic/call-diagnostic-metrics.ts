@@ -153,6 +153,7 @@ export default class CallDiagnosticMetrics extends StatelessWebexPlugin {
    */
   getSubServiceType(meeting?: any): ClientSubServiceType {
     if (meeting) {
+      // THis is a test comment
       // @ts-ignore
       const meetingInfo = meeting?.meetingInfo;
       // if not Scheduled, not Webinar, pmr - then pmr
