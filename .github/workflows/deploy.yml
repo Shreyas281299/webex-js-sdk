@@ -94,6 +94,8 @@ jobs:
     steps:
       - name: Checkout Project
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  
 
       - name: Setup Node
         uses: actions/setup-node@v3.7.0
@@ -256,6 +258,7 @@ jobs:
 
       - name: Update changelog
         run: |
+          git log --oneline
           git checkout documentation docs/changelog/
           yarn package-tools changelog --packages ${{ needs.generate-package-matrix.outputs.node-recursive }} --tag ${GITHUB_REF##*/} --commit ${{ github.event.before }}
 
