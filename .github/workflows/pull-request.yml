@@ -227,7 +227,26 @@ jobs:
         run: |
           echo "changed packages - ${{ steps.generate-package-matrix-changed.outputs.changed}}"
           echo "changed packages and dependents - ${{ steps.generate-package-matrix-recursive.outputs.recursive }}"
+      
+      - name: Set Git Identity
+        run: |
+          git config user.email "shreyassharma991228@gmail.com"
+          git config user.name "Shreyas Sharma"
 
+      - name: Pull changelogs file from documentation branch
+        run: |
+          git branch
+          git log --oneline
+          git checkout origin/documentation -- changelog
+      
+      - name: update-changelog
+        run: |
+          yarn package-tools changelog --packages ${{ steps.generate-package-matrix-recursive.outputs.recursive }} --tag next --commit ${{ github.event.pull_request.base.sha }}
+          git add changelog/
+          git commit -m "chore(changelog): update changelog"
+          git push origin HEAD:documentation --force
+
+  
 
   test-browser:
     name: Test - Browser
