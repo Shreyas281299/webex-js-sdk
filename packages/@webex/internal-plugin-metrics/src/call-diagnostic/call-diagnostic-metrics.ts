@@ -927,6 +927,7 @@ export default class CallDiagnosticMetrics extends StatelessWebexPlugin {
 
   /**
    * This method is used to set the device information by internal-plugin-device
+   * test
    * @param {device} object The webex.internal.device object
    * @returns {undefined}
    */
