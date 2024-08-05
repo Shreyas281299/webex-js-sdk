@@ -5,6 +5,7 @@ on:
   push:
     branches: # White-list of deployable tags and branches. Note that all white-listed branches cannot include any `/` characters
       - next
+      - test-changelog
 
 env:
   rid: ${{ github.run_id }}-${{ github.run_number }}
@@ -120,7 +121,7 @@ jobs:
         run: yarn
 
       - name: Update Main Branch
-        run: git fetch origin ${GITHUB_REF##*/} --unshallow
+        run: git fetch origin ${GITHUB_REF##*/}
 
         # Used for running node scripts against all changed packages since the last push to the target branch.
       - id: generate-package-matrix-node-changed
@@ -150,65 +151,9 @@ jobs:
           echo "changed packages and dependents for yarn - ${{ steps.generate-package-matrix-yarn-recursive.outputs.yarn-recursive }}"
 
 
-  publish-npm:
-    name: Publish - NPM
-    needs: generate-package-matrix
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Project
-        uses: actions/checkout@v3
-
-      - name: Setup Node
-        uses: actions/setup-node@v3.7.0
-        with:
-          node-version-file: '.nvmrc'
-          registry-url: 'https://registry.npmjs.org'
-          cache: 'yarn'
-
-      - name: Uncache Dependencies
-        uses: actions/cache@v3
-        with:
-          path: '**/node_modules'
-          key: node-modules-${{ hashFiles('./yarn.lock') }}
-
-      - name: Uncache Distributables
-        uses: actions/cache@v3
-        with:
-          path: '**/dist'
-          key: dist-${{ env.rid }}
-
-      - name: Add NPM token to .yarnrc.yml file
-        run: |
-          echo "npmAuthToken: ${{ env.token }}" >> ~/.yarnrc.yml
-
-      - name: Synchronize Packages
-        run: |
-          yarn
-          yarn package-tools sync --tag ${GITHUB_REF##*/}
-
-      - name: Display Notice
-        run: |
-          echo "packages to increment: ${{ needs.generate-package-matrix.outputs.node-recursive }}"
-          echo "tag to increment: ${GITHUB_REF##*/}"
-
-      - name: Increment Package Versions
-        run: yarn package-tools increment --packages ${{ needs.generate-package-matrix.outputs.node-recursive }} --tag ${GITHUB_REF##*/}
-
-      - name: Build all packages for publish
-        run: yarn run build:publish
-
-      - name: Build a webex UMD
-        run: yarn run build:script
-
-      - name: Deploy Packages
-        run: yarn workspaces foreach --from '${{ needs.generate-package-matrix.outputs.yarn-recursive }}' --verbose run deploy:npm --access public --tag ${GITHUB_REF##*/}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
   publish-documentation:
     name: Publish - Documentation
-    needs: [publish-npm,generate-package-matrix]
+    needs: [generate-package-matrix]
     runs-on: ubuntu-latest
 
     steps:
@@ -274,7 +219,7 @@ jobs:
   publish-tag:
     name: Publish - Tags
     runs-on: ubuntu-latest
-    needs: [generate-package-matrix, publish-npm]
+    needs: [generate-package-matrix, publish-documentation]
 
     outputs:
       message: ${{ steps.versionextractor.outputs.message }}
