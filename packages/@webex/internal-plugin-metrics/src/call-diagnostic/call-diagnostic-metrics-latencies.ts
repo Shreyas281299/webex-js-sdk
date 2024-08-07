@@ -9,6 +9,7 @@ import {MetricEventNames, PreComputedLatencies} from '../metrics.types';
 /**
  * @description Helper class to store latencies timestamp and to calculate various latencies for CA.
  * @exports
+ * testing
  * @class CallDiagnosticLatencies
  */
 export default class CallDiagnosticLatencies extends WebexPlugin {
