@@ -1,4 +1,6 @@
-export default {
+const config = require('@webex/jest-config-legacy');
+
+const myConfig = {
   rootDir: './',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testEnvironment: 'node',
@@ -8,7 +10,7 @@ export default {
   // Clear mocks in between tests by default
   clearMocks: true,
   // TODO: Set this to true once we have the source code and their corresponding test files added
-  collectCoverage: false,
+  collectCoverage: true,
   coverageThreshold: {
     global: {
       lines: 85,
@@ -40,3 +42,5 @@ export default {
     ],
   ],
 };
+
+module.exports = {...config, ...myConfig};

@@ -1,5 +1,5 @@
 import fetch, {Response} from 'node-fetch';
-import BYODS from './BYODS';
+import BYODS from '../../../src/BYODS';
 
 jest.mock('node-fetch', () => jest.fn());
 
