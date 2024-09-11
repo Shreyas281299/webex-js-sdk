@@ -52,37 +52,45 @@ class Package {
    */
   public build(config: BuildConfig): Promise<this> {
     const {
-      destination,
-      generateSourceMaps,
-      javascript,
-      source,
-      typescript,
+      destination, generateSourceMaps, javascript, source, typescript,
     } = config;
 
     const inputPath = path.join(this.data.packageRoot, source);
 
     const javascriptFileCollector = javascript
-      ? Package.getFiles({ location: inputPath, pattern: CONSTANTS.PATTERNS.JAVASCRIPT, targets: undefined })
+      ? Package.getFiles({
+        location: inputPath,
+        pattern: CONSTANTS.PATTERNS.JAVASCRIPT,
+        targets: undefined,
+      })
       : Promise.resolve([]);
 
     const typescriptFileCollector = typescript
-      ? Package.getFiles({ location: inputPath, pattern: CONSTANTS.PATTERNS.TYPESCRIPT, targets: undefined })
+      ? Package.getFiles({
+        location: inputPath,
+        pattern: CONSTANTS.PATTERNS.TYPESCRIPT,
+        targets: undefined,
+      })
       : Promise.resolve([]);
 
     return Promise.all([javascriptFileCollector, typescriptFileCollector])
       .then(([javascriptFiles, typescriptFiles]) => {
         const sourceFiles = [...javascriptFiles, ...typescriptFiles];
 
-        const files = sourceFiles.map((file) => new PackageFile({
-          directory: source,
-          location: file.replace(inputPath, ''),
-          packageRoot: this.data.packageRoot,
-        }));
+        const files = sourceFiles.map(
+          (file) => new PackageFile({
+            directory: source,
+            location: file.replace(inputPath, ''),
+            packageRoot: this.data.packageRoot,
+          }),
+        );
 
-        return Promise.all(files.map((file) => file.build({
-          destination,
-          generateSourceMap: !!generateSourceMaps,
-        })));
+        return Promise.all(
+          files.map((file) => file.build({
+            destination,
+            generateSourceMap: !!generateSourceMaps,
+          })),
+        );
       })
       .then(() => this);
   }
@@ -98,6 +106,14 @@ class Package {
    * @returns - Promise resolving to this Package instance.
    */
   public test(config: TestConfig): Promise<this> {
+    const unitTestFileCollectorInSrc = config.unit
+      ? Package.getFiles({
+        location: path.join(this.data.packageRoot, './src'),
+        pattern: CONSTANTS.PATTERNS.BYODS_TEST,
+        targets: config.targets,
+      })
+      : Promise.resolve([]);
+
     const testDirectory = path.join(this.data.packageRoot, CONSTANTS.TEST_DIRECTORIES.ROOT);
 
     const unitTestFileCollector = config.unit
@@ -116,39 +132,43 @@ class Package {
       })
       : Promise.resolve([]);
 
-    return Promise.all([unitTestFileCollector, integrationTestFileCollector])
-      .then(async ([unitFiles, integrationFiles]) => {
-        if (config.runner === 'jest') {
-          const testFiles = [...unitFiles];
+    return Promise.all([
+      unitTestFileCollector,
+      integrationTestFileCollector,
+      unitTestFileCollectorInSrc,
+    ]).then(async ([unitFiles, integrationFiles, byodsFiles]) => {
+      if (config.runner === 'jest') {
+        const testFiles = [...unitFiles, ...byodsFiles];
+        console.log(byodsFiles);
 
-          if (testFiles.length > 0) {
-            await Jest.test({ files: testFiles });
-          }
+        if (testFiles.length > 0) {
+          await Jest.test({ files: testFiles });
         }
+      }
 
-        if (config.runner === 'mocha') {
-          const testFiles = [...unitFiles, ...integrationFiles];
+      if (config.runner === 'mocha') {
+        const testFiles = [...unitFiles, ...integrationFiles];
 
-          if (testFiles.length > 0) {
-            await Mocha.test({ files: testFiles });
-          }
+        if (testFiles.length > 0) {
+          await Mocha.test({ files: testFiles });
         }
+      }
 
-        if (config.runner === 'karma') {
-          const testFiles = [...unitFiles, ...integrationFiles];
+      if (config.runner === 'karma') {
+        const testFiles = [...unitFiles, ...integrationFiles];
 
-          if (testFiles.length > 0) {
-            await Karma.test({
-              browsers: config.karmaBrowsers,
-              debug: config.karmaDebug,
-              files: testFiles,
-              port: config.karmaPort,
-            });
-          }
+        if (testFiles.length > 0) {
+          await Karma.test({
+            browsers: config.karmaBrowsers,
+            debug: config.karmaDebug,
+            files: testFiles,
+            port: config.karmaPort,
+          });
         }
+      }
 
-        return this;
-      });
+      return this;
+    });
   }
 
   /**
@@ -157,8 +177,16 @@ class Package {
    * @param options - Options for getting files.
    * @returns - Promise resolving to an Array of file paths.
    */
-  protected static getFiles({ location, pattern, targets }:
-  { location: string, pattern: string, targets: string | undefined }): Promise<Array<string>> {
+  protected static getFiles({
+    location,
+    pattern,
+    targets,
+  }: {
+    location: string;
+    pattern: string;
+    targets: string | undefined;
+  }): Promise<Array<string>> {
+    console.log(location, pattern, targets);
     let target;
     if (!targets) {
       target = path.join(location, pattern);

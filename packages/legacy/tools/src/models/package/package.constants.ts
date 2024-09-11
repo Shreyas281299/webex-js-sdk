@@ -5,6 +5,7 @@ const PATTERNS = {
   JAVASCRIPT: './**/*.js',
   TYPESCRIPT: './**/*.ts',
   TEST: './**/*.*',
+  BYODS_TEST: './**/**/**/*.test.ts',
 };
 
 /**
