@@ -211,7 +211,7 @@ describe('CallingClient Tests', () => {
       try {
         callingClient = await createClient(webex, {serviceData: serviceDataObj});
       } catch (e) {
-        expect(e.message).toEqual('Invalid service domain .');
+        expect(e.message).toEqual('Invalid service domain.');
       }
       expect.assertions(1);
     });
