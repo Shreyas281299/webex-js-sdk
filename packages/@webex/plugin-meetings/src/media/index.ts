@@ -183,6 +183,20 @@ Media.createMediaConnection = (
     });
   }
 
+  const devTurnServers = (window as any).webexTurnServers;
+
+  if (devTurnServers) {
+    console.log('adding webexTurnServers:', devTurnServers);
+
+    for (const devTurnServer of devTurnServers) {
+      iceServers.push({
+        urls: devTurnServer.url || turnServerInfo.url.replace('.public', '.ds.public'),
+        username: devTurnServer.username || turnServerInfo?.username || '',
+        credential: devTurnServer.password || turnServerInfo?.password || '',
+      });
+    }
+  }
+
   if (isMultistream) {
     const config: MultistreamConnectionConfig = {
       iceServers,
