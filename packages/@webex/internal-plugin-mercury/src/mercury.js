@@ -41,6 +41,10 @@ const Mercury = WebexPlugin.extend({
     },
     socket: 'object',
     localClusterServiceUrls: 'object',
+    mercuryTimeOffset: {
+      default: undefined,
+      type: 'number',
+    },
   },
 
   derived: {
@@ -185,6 +189,8 @@ const Mercury = WebexPlugin.extend({
           webSocketUrl.query.multipleConnections = true;
         }
 
+        webSocketUrl.query.clientTimestamp = Date.now();
+
         return url.format(webSocketUrl);
       });
   },
@@ -195,6 +201,7 @@ const Mercury = WebexPlugin.extend({
 
     socket.on('close', (...args) => this._onclose(...args));
     socket.on('message', (...args) => this._onmessage(...args));
+    socket.on('pong', (...args) => this._setTimeOffset(...args));
     socket.on('sequence-mismatch', (...args) => this._emit('sequence-mismatch', ...args));
     socket.on('ping-pong-latency', (...args) => this._emit('ping-pong-latency', ...args));
 
@@ -261,7 +268,11 @@ const Mercury = WebexPlugin.extend({
         if (reason.code !== 1006 && this.backoffCall && this.backoffCall.getNumRetries() > 0) {
           this._emit('connection_failed', reason, {retries: this.backoffCall.getNumRetries()});
         }
-        this.logger.info(`${this.namespace}: connection attempt failed`, reason);
+        this.logger.info(
+          `${this.namespace}: connection attempt failed`,
+          reason,
+          this.backoffCall?.getNumRetries() === 0 ? reason.stack : ''
+        );
         // UnknownResponse is produced by IE for any 4XXX; treated it like a bad
         // web socket url and let WDM handle the token checking
         if (reason instanceof UnknownResponse) {
@@ -393,10 +404,12 @@ const Mercury = WebexPlugin.extend({
     try {
       this.trigger(...args);
     } catch (error) {
-      this.logger.error(`${this.namespace}: error occurred in event handler`, {
+      this.logger.error(
+        `${this.namespace}: error occurred in event handler:`,
         error,
-        arguments: args,
-      });
+        ' with args: ',
+        args
+      );
     }
   },
 
@@ -487,6 +500,7 @@ const Mercury = WebexPlugin.extend({
   },
 
   _onmessage(event) {
+    this._setTimeOffset(event);
     const envelope = event.data;
 
     if (process.env.ENABLE_MERCURY_LOGGING) {
@@ -530,6 +544,13 @@ const Mercury = WebexPlugin.extend({
       .catch((reason) => {
         this.logger.error(`${this.namespace}: error occurred processing socket message`, reason);
       });
+  },
+
+  _setTimeOffset(event) {
+    const {wsWriteTimestamp} = event.data;
+    if (typeof wsWriteTimestamp === 'number' && wsWriteTimestamp > 0) {
+      this.mercuryTimeOffset = Date.now() - wsWriteTimestamp;
+    }
   },
 
   _reconnect(webSocketUrl) {

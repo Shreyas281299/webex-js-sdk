@@ -124,6 +124,58 @@ describe('webex-core', () => {
       });
     });
 
+    describe('#initServiceCatalogs', () => {
+      it('does not set initFailed to true when updateServices succeeds', async () => {
+        services.webex.credentials = {
+          getOrgId: sinon.stub().returns('orgId'),
+          canAuthorize: true,
+        };
+
+        services.collectPreauthCatalog = sinon.stub().callsFake(() => {
+          return Promise.resolve();
+        });
+
+        services.updateServices = sinon.stub().callsFake(() => {
+          return Promise.resolve();
+        });
+
+        services.logger.error = sinon.stub();
+
+        await services.initServiceCatalogs();
+
+        assert.isFalse(services.initFailed);
+
+        sinon.assert.calledWith(services.collectPreauthCatalog, {orgId: 'orgId'});
+        sinon.assert.notCalled(services.logger.warn);
+      });
+
+      it('sets initFailed to true when updateServices errors', async () => {
+        const error = new Error('failed');
+
+        services.webex.credentials = {
+          getOrgId: sinon.stub().returns('orgId'),
+          canAuthorize: true,
+        };
+
+        services.collectPreauthCatalog = sinon.stub().callsFake(() => {
+          return Promise.resolve();
+        })
+
+        services.updateServices = sinon.stub().callsFake(() => {
+          return Promise.reject(error);
+        });
+
+        services.logger.error = sinon.stub();
+
+        await services.initServiceCatalogs();
+
+        assert.isTrue(services.initFailed);
+
+        sinon.assert.calledWith(services.collectPreauthCatalog, {orgId: 'orgId'});
+        sinon.assert.calledWith(services.logger.warn, 'services: cannot retrieve postauth catalog');
+      });
+    });
+
     describe('class members', () => {
       describe('#registries', () => {
         it('should be a weakmap', () => {
@@ -233,6 +285,25 @@ describe('webex-core', () => {
           resource: 'meetingPreferences',
         });
         assert.isUndefined(res);
+      });
+    });
+
+    describe('#updateCatalog', () => {
+      it('updates the catalog', async () => {
+        const serviceGroup = 'postauth';
+        const hostmap = {hostmap: 'hostmap'};
+
+        services._formatReceivedHostmap = sinon.stub().returns({some: 'hostmap'});
+
+        catalog.updateServiceUrls = sinon.stub().returns(Promise.resolve({some: 'value'}));
+
+        const result = await services.updateCatalog(serviceGroup, hostmap);
+
+        assert.calledWith(services._formatReceivedHostmap, hostmap);
+
+        assert.calledWith(catalog.updateServiceUrls, serviceGroup, {some: 'hostmap'});
+
+        assert.deepEqual(result, {some: 'value'});
       });
     });
 

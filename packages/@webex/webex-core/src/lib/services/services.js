@@ -499,6 +499,20 @@ const Services = WebexPlugin.extend({
   },
 
   /**
+   * Updates a given service group i.e. preauth, signin, postauth with a new hostmap.
+   * @param {string} serviceGroup - preauth, signin, postauth
+   * @param {object} hostMap - The new hostmap to update the service group with.
+   * @returns {Promise<void>}
+   */
+  updateCatalog(serviceGroup, hostMap) {
+    const catalog = this._getCatalog();
+
+    const serviceHostMap = this._formatReceivedHostmap(hostMap);
+
+    return catalog.updateServiceUrls(serviceGroup, serviceHostMap);
+  },
+
+  /**
    * simplified method to update the preauth catalog via email
    *
    * @param {object} query
@@ -1022,9 +1036,10 @@ const Services = WebexPlugin.extend({
           // Validate if the token is authorized.
           if (credentials.canAuthorize) {
             // Attempt to collect the postauth catalog.
-            return this.updateServices().catch(() =>
-              this.logger.warn('services: cannot retrieve postauth catalog')
-            );
+            return this.updateServices().catch(() => {
+              this.initFailed = true;
+              this.logger.warn('services: cannot retrieve postauth catalog');
+            });
           }
 
           // Return a resolved promise for consistent return value.

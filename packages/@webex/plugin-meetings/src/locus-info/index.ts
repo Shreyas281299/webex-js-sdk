@@ -64,6 +64,7 @@ export default class LocusInfo extends EventsScope {
   replace: any;
   url: any;
   services: any;
+  resources: any;
   mainSessionLocusCache: any;
   /**
    * Constructor
@@ -263,6 +264,7 @@ export default class LocusInfo extends EventsScope {
     this.updateHostInfo(locus.host);
     this.updateMediaShares(locus.mediaShares);
     this.updateServices(locus.links?.services);
+    this.updateResources(locus.links?.resources);
   }
 
   /**
@@ -452,6 +454,7 @@ export default class LocusInfo extends EventsScope {
     this.updateIdentifiers(locus.identities);
     this.updateEmbeddedApps(locus.embeddedApps);
     this.updateServices(locus.links?.services);
+    this.updateResources(locus.links?.resources);
     this.compareAndUpdate();
     // update which required to compare different objects from locus
   }
@@ -805,6 +808,10 @@ export default class LocusInfo extends EventsScope {
           hasRaiseHandChanged,
           hasVideoChanged,
           hasInterpretationChanged,
+          hasWebcastChanged,
+          hasMeetingFullChanged,
+          hasPracticeSessionEnabledChanged,
+          hasStageViewChanged,
         },
         current,
       } = ControlsUtils.getControls(this.controls, controls);
@@ -1008,6 +1015,38 @@ export default class LocusInfo extends EventsScope {
         );
       }
 
+      if (hasWebcastChanged) {
+        this.emitScoped(
+          {file: 'locus-info', function: 'updateControls'},
+          LOCUSINFO.EVENTS.CONTROLS_WEBCAST_CHANGED,
+          {state: current.webcastControl}
+        );
+      }
+
+      if (hasMeetingFullChanged) {
+        this.emitScoped(
+          {file: 'locus-info', function: 'updateControls'},
+          LOCUSINFO.EVENTS.CONTROLS_MEETING_FULL_CHANGED,
+          {state: current.meetingFull}
+        );
+      }
+
+      if (hasPracticeSessionEnabledChanged) {
+        this.emitScoped(
+          {file: 'locus-info', function: 'updateControls'},
+          LOCUSINFO.EVENTS.CONTROLS_PRACTICE_SESSION_STATUS_UPDATED,
+          {state: current.practiceSession}
+        );
+      }
+
+      if (hasStageViewChanged) {
+        this.emitScoped(
+          {file: 'locus-info', function: 'updateControls'},
+          LOCUSINFO.EVENTS.CONTROLS_STAGE_VIEW_UPDATED,
+          {state: current.videoLayout}
+        );
+      }
+
       this.controls = controls;
     }
   }
@@ -1059,6 +1098,27 @@ export default class LocusInfo extends EventsScope {
         LOCUSINFO.EVENTS.LINKS_SERVICES,
         {
           services,
+        }
+      );
+    }
+  }
+
+  /**
+   * @param {Object} resources
+   * @returns {undefined}
+   * @memberof LocusInfo
+   */
+  updateResources(resources: Record<'webcastInstance', {url: string}>) {
+    if (resources && !isEqual(this.resources, resources)) {
+      this.resources = resources;
+      this.emitScoped(
+        {
+          file: 'locus-info',
+          function: 'updateResources',
+        },
+        LOCUSINFO.EVENTS.LINKS_RESOURCES,
+        {
+          resources,
         }
       );
     }
@@ -1223,12 +1283,13 @@ export default class LocusInfo extends EventsScope {
   /**
    * handles when the locus.mediaShares is updated
    * @param {Object} mediaShares the locus.mediaShares property
+   * @param {boolean} forceUpdate force to update the mediaShares
    * @returns {undefined}
    * @memberof LocusInfo
    * emits internal event locus_info_update_media_shares
    */
-  updateMediaShares(mediaShares: object) {
-    if (mediaShares && !isEqual(this.mediaShares, mediaShares)) {
+  updateMediaShares(mediaShares: object, forceUpdate = false) {
+    if (mediaShares && (!isEqual(this.mediaShares, mediaShares) || forceUpdate)) {
       const parsedMediaShares = MediaSharesUtils.getMediaShares(this.mediaShares, mediaShares);
 
       this.updateMeeting(parsedMediaShares.current);
@@ -1243,6 +1304,7 @@ export default class LocusInfo extends EventsScope {
         {
           current: parsedMediaShares.current,
           previous: parsedMediaShares.previous,
+          forceUpdate,
         }
       );
     }
@@ -1330,6 +1392,19 @@ export default class LocusInfo extends EventsScope {
           },
           LOCUSINFO.EVENTS.SELF_MEETING_BREAKOUTS_CHANGED,
           {breakoutSessions: parsedSelves.current.breakoutSessions}
+        );
+      }
+
+      if (parsedSelves.updates.brbChanged) {
+        this.emitScoped(
+          {
+            file: 'locus-info',
+            function: 'updateSelf',
+          },
+          LOCUSINFO.EVENTS.SELF_MEETING_BRB_CHANGED,
+          {
+            brb: parsedSelves.current.brb,
+          }
         );
       }
 

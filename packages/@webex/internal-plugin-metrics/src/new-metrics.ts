@@ -21,6 +21,7 @@ import {
   MediaQualityEvent,
   InternalEvent,
   SubmitClientEventOptions,
+  Table,
 } from './metrics.types';
 import CallDiagnosticLatencies from './call-diagnostic/call-diagnostic-metrics-latencies';
 import {setMetricTimings} from './call-diagnostic/call-diagnostic-metrics.util';
@@ -28,6 +29,7 @@ import {generateCommonErrorMetadata} from './utils';
 
 /**
  * Metrics plugin to centralize all types of metrics.
+ * https://confluence-eng-gpk2.cisco.com/conf/pages/viewpage.action?pageId=231011379
  * @class
  */
 class Metrics extends WebexPlugin {
@@ -139,7 +141,7 @@ class Metrics extends WebexPlugin {
   }
 
   /**
-   * @returns true once we have the deviceId we need to submit buisness events
+   * @returns true once we have the deviceId we need to submit business events
    */
   isReadyToSubmitBusinessEvents() {
     this.lazyBuildBusinessMetrics();
@@ -198,10 +200,20 @@ class Metrics extends WebexPlugin {
   }
 
   /**
-   * Buisness event
+   * Business event
    * @param args
    */
-  submitBusinessEvent({name, payload}: {name: string; payload: EventPayload}) {
+  submitBusinessEvent({
+    name,
+    payload,
+    table,
+    metadata,
+  }: {
+    name: string;
+    payload: EventPayload;
+    table?: Table;
+    metadata?: EventPayload;
+  }) {
     if (!this.isReady) {
       // @ts-ignore
       this.webex.logger.log(
@@ -213,7 +225,7 @@ class Metrics extends WebexPlugin {
 
     this.lazyBuildBusinessMetrics();
 
-    return this.businessMetrics.submitBusinessEvent({name, payload});
+    return this.businessMetrics.submitBusinessEvent({name, payload, table, metadata});
   }
 
   /**

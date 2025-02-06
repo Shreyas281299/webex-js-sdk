@@ -447,7 +447,7 @@ describe('plugin-mercury', () => {
             assert.isFalse(mercury.connecting, 'Mercury is not connecting');
             assert.calledWith(
               Socket.prototype.open,
-              sinon.match(/ws:\/\/providedurl.com/),
+              sinon.match(/ws:\/\/providedurl.com.*clientTimestamp[=]\d+/),
               sinon.match.any
             );
           });
@@ -706,10 +706,13 @@ describe('plugin-mercury', () => {
         sinon.stub(mercury.logger, 'error');
 
         return Promise.resolve(mercury._emit('break', event)).then((res) => {
-          assert.calledWith(mercury.logger.error, 'Mercury: error occurred in event handler', {
+          assert.calledWith(
+            mercury.logger.error,
+            'Mercury: error occurred in event handler:',
             error,
-            arguments: ['break', event],
-          });
+            ' with args: ',
+            ['break', event]
+          );
           return res;
         });
       });
@@ -785,6 +788,41 @@ describe('plugin-mercury', () => {
       });
     });
 
+    describe('#_setTimeOffset', () => {
+      it('sets mercuryTimeOffset based on the difference between wsWriteTimestamp and now', () => {
+        const event = {
+          data: {
+            wsWriteTimestamp: Date.now() - 60000,
+          }          
+        };
+        assert.isUndefined(mercury.mercuryTimeOffset);
+        mercury._setTimeOffset(event);
+        assert.isDefined(mercury.mercuryTimeOffset);
+        assert.isTrue(mercury.mercuryTimeOffset > 0);
+      });
+      it('handles negative offsets', () => {
+        const event = {
+          data: {
+            wsWriteTimestamp: Date.now() + 60000,
+          }          
+        };
+        mercury._setTimeOffset(event);
+        assert.isTrue(mercury.mercuryTimeOffset < 0);
+      });
+      it('handles invalid wsWriteTimestamp', () => {
+        const invalidTimestamps = [null, -1, 'invalid', undefined];
+        invalidTimestamps.forEach(invalidTimestamp => {
+          const event = {
+            data: {
+              wsWriteTimestamp: invalidTimestamp,
+            }          
+          };
+          mercury._setTimeOffset(event);
+          assert.isUndefined(mercury.mercuryTimeOffset);
+        });
+      });
+    });
+    
     describe('#_prepareUrl()', () => {
       beforeEach(() => {
         webex.internal.device.webSocketUrl = 'ws://example.com';
@@ -795,16 +833,16 @@ describe('plugin-mercury', () => {
       it('uses provided webSocketUrl', () =>
         webex.internal.mercury
           ._prepareUrl('ws://provided.com')
-          .then((wsUrl) => assert.match(wsUrl, /provided.com/)));
+          .then((wsUrl) => assert.match(wsUrl, /.*provided.com.*/)));
       it('requests text-mode WebSockets', () =>
         webex.internal.mercury
           ._prepareUrl()
-          .then((wsUrl) => assert.match(wsUrl, /outboundWireFormat=text/)));
+          .then((wsUrl) => assert.match(wsUrl, /.*outboundWireFormat=text.*/)));
 
       it('requests the buffer state message', () =>
         webex.internal.mercury
           ._prepareUrl()
-          .then((wsUrl) => assert.match(wsUrl, /bufferStates=true/)));
+          .then((wsUrl) => assert.match(wsUrl, /.*bufferStates=true.*/)));
 
       it('does not add conditional properties', () =>
         webex.internal.mercury._prepareUrl().then((wsUrl) => {

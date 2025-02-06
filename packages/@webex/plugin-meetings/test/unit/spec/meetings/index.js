@@ -8,6 +8,7 @@ import {Crypto} from '@peculiar/webcrypto';
 global.crypto = new Crypto();
 
 import Device from '@webex/internal-plugin-device';
+import {CatalogDetails} from '@webex/internal-plugin-device';
 import Mercury from '@webex/internal-plugin-mercury';
 import {assert} from '@webex/test-helper-chai';
 import MockWebex from '@webex/test-helper-mock-webex';
@@ -128,6 +129,11 @@ describe('plugin-meetings', () => {
 
       Object.assign(webex, {
         logger,
+        people: {
+          _getMe: sinon.stub().resolves({
+            type: 'validuser',
+          }),
+        },
       });
 
       startReachabilityStub = sinon.stub(webex.meetings, 'startReachability').resolves();
@@ -194,6 +200,43 @@ describe('plugin-meetings', () => {
 
     it('Should trigger h264 download', () => {
       assert.calledOnce(MeetingsUtil.checkH264Support);
+    });
+
+    describe('#getBasicMeetingInformation', () => {
+      beforeEach(() => {
+        sinon.stub(MeetingUtil, 'cleanUp');
+      });
+
+      it('returns correct meeting information', async () => {
+        const meeting = await webex.meetings.createMeeting('test', 'test');
+
+        const meetingIds = {
+          meetingId: meeting.id,
+          correlationId: meeting.correlationId,
+        };
+
+        // before meeting is destroyed - it should return information from the meetingCollection
+        assert.equal(
+          webex.meetings.getBasicMeetingInformation(meetingIds.meetingId).id,
+          meetingIds.meetingId
+        );
+        assert.equal(
+          webex.meetings.getBasicMeetingInformation(meetingIds.meetingId).correlationId,
+          meetingIds.correlationId
+        );
+
+        webex.meetings.destroy(meeting, test1);
+
+        // and it should still return the information after the meeting is destroyed
+        assert.equal(
+          webex.meetings.getBasicMeetingInformation(meetingIds.meetingId).id,
+          meetingIds.meetingId
+        );
+        assert.equal(
+          webex.meetings.getBasicMeetingInformation(meetingIds.meetingId).correlationId,
+          meetingIds.correlationId
+        );
+      });
     });
 
     describe('#startReachability', () => {
@@ -302,6 +345,22 @@ describe('plugin-meetings', () => {
       });
     });
 
+    describe('#_toggleIpv6BackendNativeSupport', () => {
+      it('should have _toggleIpv6BackendNativeSupport', () => {
+        assert.equal(typeof webex.meetings._toggleIpv6BackendNativeSupport, 'function');
+      });
+
+      describe('success', () => {
+        it('should update meetings config accordingly', () => {
+          webex.meetings._toggleIpv6BackendNativeSupport(true);
+          assert.equal(webex.meetings.config.backendIpv6NativeSupport, true);
+
+          webex.meetings._toggleIpv6BackendNativeSupport(false);
+          assert.equal(webex.meetings.config.backendIpv6NativeSupport, false);
+        });
+      });
+    });
+
     describe('Public API Contracts', () => {
       describe('#register', () => {
         it('emits an event and resolves when register succeeds', async () => {
@@ -346,11 +405,20 @@ describe('plugin-meetings', () => {
           webex.canAuthorize = true;
           webex.meetings.registered = false;
           await webex.meetings.register();
-          assert.called(webex.internal.device.register);
+          assert.calledOnceWithExactly(webex.internal.device.register, undefined);
           assert.called(webex.internal.services.getMeetingPreferences);
           assert.called(webex.internal.services.fetchClientRegionInfo);
           assert.called(webex.internal.mercury.connect);
           assert.isTrue(webex.meetings.registered);
+        });
+
+        it('passes on the device registration options', async () => {
+          webex.canAuthorize = true;
+          webex.meetings.registered = false;
+          await webex.meetings.register({includeDetails: CatalogDetails.features});
+          assert.calledOnceWithExactly(webex.internal.device.register, {
+            includeDetails: CatalogDetails.features,
+          });
         });
       });
 
@@ -753,14 +821,16 @@ describe('plugin-meetings', () => {
 
         const FAKE_USE_RANDOM_DELAY = true;
         const correlationId = 'my-correlationId';
+        const sessionCorrelationId = 'my-session-correlationId';
         const callStateForMetrics = {
+          sessionCorrelationId: 'my-session-correlationId2',
           correlationId: 'my-correlationId2',
           joinTrigger: 'my-join-trigger',
           loginType: 'my-login-type',
         };
 
-        it('should call setCallStateForMetrics on any pre-existing meeting', async () => {
-          const fakeMeeting = {setCallStateForMetrics: sinon.mock()};
+        it('should call updateCallStateForMetrics on any pre-existing meeting', async () => {
+          const fakeMeeting = {updateCallStateForMetrics: sinon.mock()};
           webex.meetings.meetingCollection.getByKey = sinon.stub().returns(fakeMeeting);
           await webex.meetings.create(
             test1,
@@ -769,11 +839,15 @@ describe('plugin-meetings', () => {
             {},
             correlationId,
             true,
-            callStateForMetrics
+            callStateForMetrics,
+            undefined,
+            undefined,
+            sessionCorrelationId
           );
-          assert.calledOnceWithExactly(fakeMeeting.setCallStateForMetrics, {
+          assert.calledOnceWithExactly(fakeMeeting.updateCallStateForMetrics, {
             ...callStateForMetrics,
             correlationId,
+            sessionCorrelationId,
           });
         });
 
@@ -814,13 +888,14 @@ describe('plugin-meetings', () => {
               undefined,
               meetingInfo,
               'meetingLookupURL',
+              sessionCorrelationId,
             ],
             [
               test1,
               test2,
               FAKE_USE_RANDOM_DELAY,
               {},
-              {correlationId},
+              {correlationId, sessionCorrelationId},
               true,
               meetingInfo,
               'meetingLookupURL',
@@ -1719,6 +1794,7 @@ describe('plugin-meetings', () => {
             const expectedMeetingData = {
               correlationId: 'my-correlationId',
               callStateForMetrics: {
+                sessionCorrelationId: '',
                 correlationId: 'my-correlationId',
                 joinTrigger: 'my-join-trigger',
                 loginType: 'my-login-type',
@@ -1812,7 +1888,10 @@ describe('plugin-meetings', () => {
           });
 
           it('creates the meeting avoiding meeting info fetch by passing type as DESTINATION_TYPE.ONE_ON_ONE_CALL', async () => {
-            const meeting = await webex.meetings.createMeeting('test destination', DESTINATION_TYPE.ONE_ON_ONE_CALL);
+            const meeting = await webex.meetings.createMeeting(
+              'test destination',
+              DESTINATION_TYPE.ONE_ON_ONE_CALL
+            );
 
             assert.instanceOf(
               meeting,
@@ -1822,7 +1901,6 @@ describe('plugin-meetings', () => {
 
             assert.notCalled(webex.meetings.meetingInfo.fetchMeetingInfo);
           });
-
         });
 
         describe('rejected MeetingInfo.#fetchMeetingInfo - does not log for known Error types', () => {
@@ -1896,17 +1974,25 @@ describe('plugin-meetings', () => {
           assert.exists(webex.meetings.destroy);
         });
         describe('correctly established meeting', () => {
+          let deleteSpy;
           beforeEach(() => {
-            webex.meetings.meetingCollection.delete = sinon.stub().returns(true);
+            deleteSpy = sinon.spy(webex.meetings.meetingCollection, 'delete');
           });
 
-          it('tests the destroy removal from the collection', async () => {
+          it('tests the destroy removal from the collection and storing basic info in deletedMeetings', async () => {
             const meeting = await webex.meetings.createMeeting('test', 'test');
+
+            const meetingIds = {
+              meetingId: meeting.id,
+              correlationId: meeting.correlationId,
+              roles: meeting.roles,
+              callStateForMetrics: meeting.callStateForMetrics,
+            };
 
             webex.meetings.destroy(meeting, test1);
 
-            assert.calledOnce(webex.meetings.meetingCollection.delete);
-            assert.calledWith(webex.meetings.meetingCollection.delete, meeting.id);
+            assert.calledOnce(deleteSpy);
+            assert.calledWith(deleteSpy, meeting.id);
             assert.calledWith(
               TriggerProxy.trigger,
               sinon.match.instanceOf(Meetings),
@@ -1920,6 +2006,25 @@ describe('plugin-meetings', () => {
                 reason: test1,
               }
             );
+
+            // check that the meeting is stored in deletedMeetings and removed from meetingCollection
+            assert.equal(webex.meetings.deletedMeetings.get(meeting.id).id, meetingIds.meetingId);
+            assert.equal(
+              webex.meetings.deletedMeetings.get(meeting.id).correlationId,
+              meetingIds.correlationId
+            );
+
+            assert.equal(webex.meetings.meetingCollection.get(meeting.id), undefined);
+
+            // and that getBasicMeetingInformation() still returns the meeting info
+            const deletedMeetingInfo = webex.meetings.getBasicMeetingInformation(
+              meetingIds.meetingId
+            );
+
+            assert.equal(deletedMeetingInfo.id, meetingIds.meetingId);
+            assert.equal(deletedMeetingInfo.correlationId, meetingIds.correlationId);
+            assert.equal(deletedMeetingInfo.roles, meetingIds.roles);
+            assert.equal(deletedMeetingInfo.callStateForMetrics, meetingIds.callStateForMetrics);
           });
         });
 
@@ -1976,7 +2081,22 @@ describe('plugin-meetings', () => {
           ]);
         });
 
-        const setup = ({user} = {}) => {
+        it('should handle failure to get user information if scopes are insufficient', async () => {
+          loggerProxySpy = sinon.spy(LoggerProxy.logger, 'error');
+          Object.assign(webex.people, {
+            _getMe: sinon.stub().returns(Promise.reject()),
+          });
+
+          await webex.meetings.fetchUserPreferredWebexSite();
+
+          assert.equal(webex.meetings.preferredWebexSite, '');
+          assert.calledOnceWithExactly(
+            loggerProxySpy,
+            'Failed to retrieve user information. No preferredWebexSite will be set'
+          );
+        });
+
+        const setup = ({me = {type: 'validuser'}, user} = {}) => {
           loggerProxySpy = sinon.spy(LoggerProxy.logger, 'error');
           assert.deepEqual(webex.internal.services._getCatalog().getAllowedDomains(), []);
 
@@ -1989,7 +2109,21 @@ describe('plugin-meetings', () => {
           Object.assign(webex.internal.services, {
             getMeetingPreferences: sinon.stub().returns(Promise.resolve({})),
           });
+
+          Object.assign(webex.people, {
+            _getMe: sinon.stub().returns(Promise.resolve(me)),
+          });
         };
+
+        it('should not call request.getMeetingPreferences if user is a guest', async () => {
+          setup({me: {type: 'appuser'}});
+
+          await webex.meetings.fetchUserPreferredWebexSite();
+
+          assert.equal(webex.meetings.preferredWebexSite, '');
+          assert.deepEqual(webex.internal.services._getCatalog().getAllowedDomains(), []);
+          assert.notCalled(webex.internal.services.getMeetingPreferences);
+        });
 
         it('should not fail if UserPreferred info is not fetched ', async () => {
           setup();
