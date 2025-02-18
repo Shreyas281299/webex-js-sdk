@@ -259,3 +259,10 @@ export interface SCIMListResponse {
   startIndex: number;
   Resources: Resource[];
 }
+
+export enum WorkerMessageType {
+  START_KEEPALIVE = 'START_KEEPALIVE',
+  CLEAR_KEEPALIVE = 'CLEAR_KEEPALIVE',
+  KEEPALIVE_SUCCESS = 'KEEPALIVE_SUCCESS',
+  KEEPALIVE_FAILURE = 'KEEPALIVE_FAILURE',
+}
