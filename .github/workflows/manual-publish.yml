@@ -188,7 +188,7 @@ jobs:
       - name: Build tools and set versions
         run: |
           yarn workspaces foreach --from '@webex/*-tools' --topological-dev --parallel --verbose run build:src
-          yarn package-tools version set ${{ inputs.version }} --all
+          yarn package-tools version --set ${{ inputs.version }} --all
 
       - name: Build packages locally
         run: yarn build:local
