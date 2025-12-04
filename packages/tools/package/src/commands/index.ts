@@ -4,6 +4,7 @@ export { default as scripts } from './scripts';
 export { default as sync } from './sync';
 export { default as update } from './update';
 export { default as changelog } from './changelog';
+export { default as version } from './version';
 
 export type {
   IncrementOptions,
@@ -29,3 +30,6 @@ export type {
 export type{
   ChangelogOptions,
 } from './changelog';
+export type {
+  VersionOptions,
+} from './version';
