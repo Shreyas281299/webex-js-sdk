@@ -10,6 +10,7 @@ const main = () => {
   commands.mount(PackageTools.sync);
   commands.mount(PackageTools.update);
   commands.mount(PackageTools.changelog);
+  commands.mount(PackageTools.version);
 
   commands.process();
 };

@@ -30,6 +30,7 @@ export type {
 export type{
   ChangelogOptions,
 } from './changelog';
+
 export type {
   VersionOptions,
 } from './version';
