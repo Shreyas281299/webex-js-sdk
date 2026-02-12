@@ -357,6 +357,15 @@ export default class TaskManager extends EventEmitter {
             // This can only be received by the agent who initiated the consult.
             // We need not emit any event here since this will be result of promise
             task = this.updateTaskData(task, payload.data);
+            if (
+              task.data.interaction.mediaType === 'chat' &&
+              task.data.interaction.state === 'consult' &&
+              !isPrimary(task, this.agentId)
+            ) {
+              // Clear consulted agent task if consult failed (e.g., no answer)
+              this.removeTaskFromCollection(task);
+              task.emit(TASK_EVENTS.TASK_CONFERENCE_FAILED, payload.data.reason);
+            }
             break;
           case CC_EVENTS.AGENT_CONSULT_ENDED:
             task = this.updateTaskData(task, payload.data);
@@ -437,18 +446,21 @@ export default class TaskManager extends EventEmitter {
           case CC_EVENTS.PARTICIPANT_LEFT_CONFERENCE: {
             // Conference ended - update task state and emit event
 
-            task = this.updateTaskData(task, {
-              ...payload.data,
-              isConferenceInProgress: getIsConferenceInProgress(payload.data),
-            });
-            if (checkParticipantNotInInteraction(task, this.agentId)) {
-              if (
-                isParticipantInMainInteraction(task, this.agentId) ||
-                isPrimary(task, this.agentId)
-              ) {
-                LoggerProxy.log('Primary or main interaction participant leaving conference');
-              } else {
-                this.removeTaskFromCollection(task);
+            // Only emit the participant left event if task is not present in the taskCollection
+            if (this.taskCollection[payload.data.interactionId]) {
+              task = this.updateTaskData(task, {
+                ...payload.data,
+                isConferenceInProgress: getIsConferenceInProgress(payload.data),
+              });
+              if (checkParticipantNotInInteraction(task, this.agentId)) {
+                if (
+                  isParticipantInMainInteraction(task, this.agentId) ||
+                  isPrimary(task, this.agentId)
+                ) {
+                  LoggerProxy.log('Primary or main interaction participant leaving conference');
+                } else {
+                  this.removeTaskFromCollection(task);
+                }
               }
             }
             task.emit(TASK_EVENTS.TASK_PARTICIPANT_LEFT, task);

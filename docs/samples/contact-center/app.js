@@ -703,23 +703,31 @@ async function initiateConsultTransfer() {
 // Function to end consult
 async function endConsult() {
   const taskId = currentTask.data?.interactionId;
-
-  const consultEndPayload = currentConsultQueueId ? {
-    isConsult: true,
-    taskId: taskId,
-    queueId: currentConsultQueueId,
-  } : 
-  {
-    isConsult: true,
-    taskId: taskId,
-  };
+  const currentAgentId = webex?.cc?.taskManager?.getAgentId() || agentId;
 
   try {
+    if (isChatConsultAccepted(currentTask, currentAgentId)) {
+      await currentTask.exitConference();
+      console.log('Exited consult conference successfully');
+      return;
+    }
+
+    const consultEndPayload = currentConsultQueueId
+      ? {
+          isConsult: true,
+          taskId: taskId,
+          queueId: currentConsultQueueId,
+        }
+      : {
+          isConsult: true,
+          taskId: taskId,
+        };
+
     await currentTask.endConsult(consultEndPayload);
     console.log('Consult ended successfully');
   } catch (error) {
-    console.error('Failed to end consult', error);
-    alert('Failed to end consult');
+    console.error('Failed to end consult/exit conference', error);
+    alert('Failed to end consult/exit conference');
   }
 }
 
@@ -979,6 +987,20 @@ function isInteractionOnHold(task) {
   return Object.values(interaction.media).some((media) => media.isHold);
 } 
 
+function clearTaskStateFromUI() {
+  currentTask = undefined;
+  disableAllCallControls();
+  disableAnswerDeclineButtons();
+  incomingDetailsElm.innerText = '';
+  participantListElm.style.display = 'none';
+  updateTaskList();
+}
+
+function handleConsultConferenceFailed() {
+  // Conference failed means task was removed; clear task state from UI
+  clearTaskStateFromUI();
+}
+
 // Register task listeners
 function registerTaskListeners(task) {
   task.on('task:assigned', (task) => {
@@ -1002,11 +1024,17 @@ function registerTaskListeners(task) {
 
   task.on('task:consultAccepted', updateTaskList);
 
-  task.on('task:consulting', updateTaskList);
+  task.on('task:consulting', () => {
+    
+
+    updateTaskList()
+  });
 
   task.on('task:consultQueueCancelled', updateTaskList);
 
   task.on('task:consultEnd', updateTaskList);
+
+  task.on('task:conferenceFailed', handleConsultConferenceFailed);
   task.on('task:rejected', (reason) => {
     updateTaskList();
     console.info('Task is rejected with reason:', reason);
@@ -1076,6 +1104,22 @@ function isSecondaryAgent(task) {
  */
 function isSecondaryEpDnAgent(task) {
   return task.data.interaction.mediaType === 'telephony' && isSecondaryAgent(task);
+}
+
+function isPrimaryTask(task, currentAgentId) {
+  if (!task?.data?.interaction?.owner) {
+    // Fall back to checking data.agentId when owner is not set
+    return task?.data?.agentId === currentAgentId;
+  }
+
+  return task.data.interaction.owner === currentAgentId;
+}
+
+function isChatConsultAccepted(task, currentAgentId) {
+  return (
+    task?.data?.interaction?.mediaType === 'chat' &&
+    task?.data?.interaction?.state === 'conference'
+  );
 }
 
 function getConsultMPCState(task, agentId) {
@@ -1173,6 +1217,7 @@ function updateCallControlUI(task) {
   const isNew = isIncomingTask(task, agentId);
   const digitalChannels = ['chat', 'email', 'social'];
   const isBrowser = agentDeviceType === 'BROWSER';
+  const currentAgentId = webex?.cc?.taskManager?.getAgentId() || agentId;
 
   // Element lookup map to avoid eval usage
   const elementMap = {
@@ -1188,6 +1233,8 @@ function updateCallControlUI(task) {
     'conferenceToggleBtn': conferenceToggleBtn
   };
 
+  endConsultBtn.innerText = 'End Consult';
+
   // Helper to set multiple controls at once
   function setControls(configs) {
     for (const [elmName, config] of Object.entries(configs)) {
@@ -1201,6 +1248,14 @@ function updateCallControlUI(task) {
   if (isNew) {
     disableAllCallControls();
     enableAnswerDeclineButtons(currentTask);
+    return;
+  }
+
+  if (isChatConsultAccepted(task, currentAgentId)) {
+    disableAllCallControls();
+    endConsultBtn.style.display = 'inline-block';
+    endConsultBtn.disabled = false;
+    endConsultBtn.innerText = 'End Consulting';
     return;
   }
 
@@ -1906,9 +1961,15 @@ incomingCallListener.addEventListener('task:incoming', (event) => {
  async function answer() {
   answerElm.disabled = true;
   declineElm.disabled = true;
-  await currentTask.accept();
+  // Digital Channel Consult Accept
+  if(currentTask.data.interaction.mediaType === 'chat' && currentTask.data?.interaction?.state === 'consult') {
+    await currentTask.consultAccept();
+    incomingDetailsElm.innerText = 'Consult Accepted';
+  } else {
+    await currentTask.accept();
+    incomingDetailsElm.innerText = 'Task Accepted';
+  }
   updateTaskList();
-  incomingDetailsElm.innerText = 'Task Accepted';
 }
 
 function decline() {

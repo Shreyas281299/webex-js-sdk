@@ -57,6 +57,7 @@ export const METHODS = {
   PAUSE_RECORDING: 'pauseRecording',
   RESUME_RECORDING: 'resumeRecording',
   CONSULT: 'consult',
+  CONSULT_ACCEPT: 'consultAccept',
   END_CONSULT: 'endConsult',
   TRANSFER: 'transfer',
   CONSULT_TRANSFER: 'consultTransfer',

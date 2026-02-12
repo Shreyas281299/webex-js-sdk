@@ -1120,6 +1120,74 @@ export default class Task extends EventEmitter implements ITask {
   }
 
   /**
+   * Accepts a consultation request for the current task.
+   * This is used by the agent who received a consult offer to join the consult call.
+   *
+   * @returns Promise<void>
+   * @throws Error if consultation acceptance fails
+   * @example
+   * ```typescript
+   * await task.consultAccept();
+   * ```
+   */
+  public async consultAccept(): Promise<void> {
+    try {
+      LoggerProxy.info(`Accepting consult`, {
+        module: TASK_FILE,
+        method: METHODS.CONSULT_ACCEPT,
+        interactionId: this.data.interactionId,
+      });
+
+      this.metricsManager.timeEvent([
+        METRIC_EVENT_NAMES.TASK_ACCEPT_CONSULT_SUCCESS,
+        METRIC_EVENT_NAMES.TASK_ACCEPT_CONSULT_FAILED,
+      ]);
+
+      const result = await this.contact.consultAccept({
+        interactionId: this.data.interactionId,
+      });
+
+      this.metricsManager.trackEvent(
+        METRIC_EVENT_NAMES.TASK_ACCEPT_CONSULT_SUCCESS,
+        {
+          taskId: this.data.interactionId,
+          ...MetricsManager.getCommonTrackingFieldForAQMResponse(result),
+        },
+        ['operational', 'behavioral', 'business']
+      );
+
+      LoggerProxy.log(`Consult accepted successfully`, {
+        module: TASK_FILE,
+        method: METHODS.CONSULT_ACCEPT,
+        trackingId: result.trackingId,
+        interactionId: this.data.interactionId,
+      });
+
+      return Promise.resolve();
+    } catch (error) {
+      const err = generateTaskErrorObject(error, METHODS.CONSULT_ACCEPT, TASK_FILE);
+      const taskErrorProps = {
+        trackingId: err.data?.trackingId,
+        errorMessage: err.data?.message,
+        errorType: err.data?.errorType,
+        errorData: err.data?.errorData,
+        reasonCode: err.data?.reasonCode,
+      };
+      this.metricsManager.trackEvent(
+        METRIC_EVENT_NAMES.TASK_ACCEPT_CONSULT_FAILED,
+        {
+          taskId: this.data.interactionId,
+          error: error.toString(),
+          ...taskErrorProps,
+          ...MetricsManager.getCommonTrackingFieldForAQMResponseFailed(error.details || {}),
+        },
+        ['operational', 'behavioral', 'business']
+      );
+      throw err;
+    }
+  }
+
+  /**
    * Consults another agent or queue on an ongoing task for further assistance.
    * During consultation, the original customer is typically placed on hold while
    * the agent seeks guidance from another agent or queue.
