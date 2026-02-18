@@ -16,7 +16,7 @@ export type CallForwardAlwaysSetting = {
   /**
    * This indicates if the call forward always is enabled or disabled.
    */
-  enabled: boolean;
+  enabled?: boolean;
   /**
    * If this property is set to true, a brief tone will be played on the user's line when a call has been forwarded.
    */
