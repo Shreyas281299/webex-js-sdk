@@ -28,7 +28,7 @@ import {
  */
 export default class WebCallingService extends EventEmitter {
   /**
-   * The CallingClient instance that manages WebRTC calling capabilities
+   * The CallingClient instance that manages WebRTC calling capabilities.
    * @private
    */
   private callingClient: ICallingClient;
