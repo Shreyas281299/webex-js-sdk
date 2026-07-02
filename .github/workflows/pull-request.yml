@@ -11,6 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: 'true'
   rid: ${{ github.run_id }}-${{ github.run_number }}
   SKIP_FLAKY_TESTS: ${{ secrets.SKIP_FLAKY_TESTS }}
   WEBEX_APPID_ORGID: ${{ secrets.WEBEX_APPID_ORGID }}
@@ -64,7 +65,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3.7.0
         with:
-          node-version-file: '.nvmrc'
+          node-version: '20'
           registry-url: 'https://registry.npmjs.org'
           cache: 'yarn'
 
@@ -136,7 +137,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3.7.0
         with:
-          node-version-file: '.nvmrc'
+          node-version: '20'
           registry-url: 'https://registry.npmjs.org'
           cache: 'yarn'
 
@@ -190,7 +191,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3.7.0
         with:
-          node-version-file: '.nvmrc'
+          node-version: '20'
           registry-url: 'https://registry.npmjs.org'
           cache: 'yarn'
 
@@ -248,7 +249,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3.7.0
         with:
-          node-version-file: '.nvmrc'
+          node-version: '20'
           registry-url: 'https://registry.npmjs.org'
           cache: 'yarn'
 
@@ -292,7 +293,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3.7.0
         with:
-          node-version-file: '.nvmrc'
+          node-version: '20'
           registry-url: 'https://registry.npmjs.org'
           cache: 'yarn'
 
@@ -337,7 +338,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3.7.0
         with:
-          node-version-file: '.nvmrc'
+          node-version: '20'
           registry-url: 'https://registry.npmjs.org'
           cache: 'yarn'
 
@@ -384,7 +385,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3.7.0
         with:
-          node-version-file: '.nvmrc'
+          node-version: '20'
           registry-url: 'https://registry.npmjs.org'
           cache: 'yarn'
 
@@ -427,7 +428,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3.7.0
         with:
-          node-version-file: '.nvmrc'
+          node-version: '20'
           registry-url: 'https://registry.npmjs.org'
           cache: 'yarn'
 
@@ -472,7 +473,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3.7.0
         with:
-          node-version-file: '.nvmrc'
+          node-version: '20'
           registry-url: 'https://registry.npmjs.org'
           cache: 'yarn'
 
