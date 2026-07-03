@@ -21,10 +21,10 @@ jobs:
 
     steps:
       - name: Checkout Project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v3.7.0
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
@@ -34,7 +34,7 @@ jobs:
         run: yarn
 
       - name: Cache Dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         if: steps.validate-dependencies.outputs.cache-hit != 'true'
         with:
           path: '**/node_modules'
@@ -48,17 +48,17 @@ jobs:
 
     steps:
       - name: Checkout Project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v3.7.0
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
           cache: 'yarn'
 
       - name: Uncache Dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: '**/node_modules'
           key: node-modules-${{ hashFiles('./yarn.lock') }}
@@ -76,7 +76,7 @@ jobs:
         run: yarn workspaces foreach --parallel --topological --verbose run build:src
 
       - name: Cache Distributables
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: '**/dist'
           key: dist-${{ env.rid }}
@@ -95,23 +95,23 @@ jobs:
 
     steps:
       - name: Checkout Project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v3.7.0
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
           cache: 'yarn'
 
       - name: Uncache Dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: '**/node_modules'
           key: node-modules-${{ hashFiles('./yarn.lock') }}
 
       - name: Uncache Distributables
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: '**/dist'
           key: dist-${{ env.rid }}
@@ -160,23 +160,23 @@ jobs:
 
     steps:
       - name: Checkout Project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v3.7.0
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
           cache: 'yarn'
 
       - name: Uncache Dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: '**/node_modules'
           key: node-modules-${{ hashFiles('./yarn.lock') }}
 
       - name: Uncache Distributables
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: '**/dist'
           key: dist-${{ env.rid }}
@@ -226,25 +226,25 @@ jobs:
         run: echo "Documentation Deploy Steps"
 
       - name: Checkout Project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Setup Node
-        uses: actions/setup-node@v3.7.0
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
           cache: 'yarn'
 
       - name: Uncache Dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: '**/node_modules'
           key: node-modules-${{ hashFiles('./yarn.lock') }}
 
       - name: Uncache Distributables
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: '**/dist'
           key: dist-${{ env.rid }}
@@ -298,23 +298,23 @@ jobs:
 
     steps:
       - name: Checkout Project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v3.7.0
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
           cache: 'yarn'
 
       - name: Uncache Dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: '**/node_modules'
           key: node-modules-${{ hashFiles('./yarn.lock') }}
 
       - name: Uncache Distributables
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: '**/dist'
           key: dist-${{ env.rid }}
@@ -391,7 +391,7 @@ jobs:
     steps:
       - name: Get PR Number
         id: get-pr
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const deploySha = context.sha;
@@ -415,7 +415,7 @@ jobs:
       - name: Post Release Comment on PR
         id: post-comment
         if: steps.get-pr.outputs.pr_number != ''
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const prNumber = parseInt('${{ steps.get-pr.outputs.pr_number }}');

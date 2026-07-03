@@ -57,13 +57,13 @@ jobs:
 
     steps:
       - name: Checkout Project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@v3.7.0
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
@@ -79,14 +79,14 @@ jobs:
           echo "WEBEX_CLIENT_SECRET=\"${{ secrets.WEBEX_CLIENT_SECRET }}\"" >> ./.env
 
       - name: Cache Environment Variables
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: './.env'
           key: env-${{ env.rid }}
 
       - id: validate-dependencies
         name: Validate Dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: '**/node_modules'
           key: node-modules-${{ hashFiles('./yarn.lock') }}
@@ -116,7 +116,7 @@ jobs:
           fi
 
       - name: Cache Dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         if: steps.validate-dependencies.outputs.cache-hit != 'true'
         with:
           path: '**/node_modules'
@@ -129,26 +129,26 @@ jobs:
 
     steps:
       - name: Checkout Project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@v3.7.0
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
           cache: 'yarn'
 
       - name: Uncache Environment Variables
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: './.env'
           key: env-${{ env.rid }}
 
       - name: Uncache Dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: '**/node_modules'
           key: node-modules-${{ hashFiles('./yarn.lock') }}
@@ -166,7 +166,7 @@ jobs:
         run: yarn workspaces foreach --parallel --topological --verbose run build:src
 
       - name: Cache Distributables
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: '**/dist'
           key: dist-${{ env.rid }}
@@ -183,32 +183,32 @@ jobs:
 
     steps:
       - name: Checkout Project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@v3.7.0
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
           cache: 'yarn'
 
       - name: Uncache Environment Variables
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: './.env'
           key: env-${{ env.rid }}
 
       - name: Uncache Dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: '**/node_modules'
           key: node-modules-${{ hashFiles('./yarn.lock') }}
 
       - name: Uncache Distributables
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: '**/dist'
           key: dist-${{ env.rid }}
@@ -241,32 +241,32 @@ jobs:
 
     steps:
       - name: Checkout Project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@v3.7.0
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
           cache: 'yarn'
 
       - name: Uncache Environment Variables
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: './.env'
           key: env-${{ env.rid }}
 
       - name: Uncache Dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: '**/node_modules'
           key: node-modules-${{ hashFiles('./yarn.lock') }}
 
       - name: Uncache Distributables
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: '**/dist'
           key: dist-${{ env.rid }}
@@ -285,32 +285,32 @@ jobs:
 
     steps:
       - name: Checkout Project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@v3.7.0
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
           cache: 'yarn'
 
       - name: Uncache Environment Variables
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: './.env'
           key: env-${{ env.rid }}
 
       - name: Uncache Dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: '**/node_modules'
           key: node-modules-${{ hashFiles('./yarn.lock') }}
 
       - name: Uncache Distributables
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: '**/dist'
           key: dist-${{ env.rid }}
@@ -330,32 +330,32 @@ jobs:
 
     steps:
       - name: Checkout Project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@v3.7.0
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
           cache: 'yarn'
 
       - name: Uncache Environment Variables
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: './.env'
           key: env-${{ env.rid }}
 
       - name: Uncache Dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: '**/node_modules'
           key: node-modules-${{ hashFiles('./yarn.lock') }}
 
       - name: Uncache Distributables
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: '**/dist'
           key: dist-${{ env.rid }}
@@ -377,32 +377,32 @@ jobs:
 
     steps:
       - name: Checkout Project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@v3.7.0
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
           cache: 'yarn'
 
       - name: Uncache Environment Variables
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: './.env'
           key: env-${{ env.rid }}
 
       - name: Uncache Dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: '**/node_modules'
           key: node-modules-${{ hashFiles('./yarn.lock') }}
 
       - name: Uncache Distributables
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: '**/dist'
           key: dist-${{ env.rid }}
@@ -420,32 +420,32 @@ jobs:
 
     steps:
       - name: Checkout Project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@v3.7.0
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
           cache: 'yarn'
 
       - name: Uncache Environment Variables
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: './.env'
           key: env-${{ env.rid }}
 
       - name: Uncache Dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: '**/node_modules'
           key: node-modules-${{ hashFiles('./yarn.lock') }}
 
       - name: Uncache Distributables
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: '**/dist'
           key: dist-${{ env.rid }}
@@ -465,32 +465,32 @@ jobs:
 
     steps:
       - name: Checkout Project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@v3.7.0
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
           cache: 'yarn'
 
       - name: Uncache Environment Variables
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: './.env'
           key: env-${{ env.rid }}
 
       - name: Uncache Dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: '**/node_modules'
           key: node-modules-${{ hashFiles('./yarn.lock') }}
 
       - name: Uncache Distributables
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: '**/dist'
           key: dist-${{ env.rid }}
