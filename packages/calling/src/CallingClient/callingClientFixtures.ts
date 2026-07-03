@@ -172,6 +172,8 @@ const mockCatalogUSInt = {
   'mobius-eu-central-1.int.infra.webex.com': mockEUIntServiceHosts,
 };
 
+const somethingRandom = 'somethingRandom';
+
 export {
   ipPayload,
   regionBody,
@@ -189,4 +191,5 @@ export {
   mockCatalogEUInt,
   mockCatalogUS,
   mockCatalogUSInt,
+  somethingRandom,
 };
